@@ -1,0 +1,91 @@
+{
+  "name": "Booking",
+  "type": "object",
+  "properties": {
+    "destination": {
+      "type": "string"
+    },
+    "from_city": {
+      "type": "string"
+    },
+    "days": {
+      "type": "number"
+    },
+    "budget": {
+      "type": "number"
+    },
+    "group_type": {
+      "type": "string"
+    },
+    "food_preference": {
+      "type": "string"
+    },
+    "transport": {
+      "type": "string"
+    },
+    "payment_method": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "confirmed",
+        "cancelled",
+        "completed"
+      ],
+      "default": "pending"
+    },
+    "assigned_guide_id": {
+      "type": "string"
+    },
+    "total_cost": {
+      "type": "number"
+    },
+    "trip_summary": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "destination",
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "data.assigned_guide_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {},
+    "update": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "data.assigned_guide_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

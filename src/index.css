@@ -1,0 +1,94 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 40 40% 97%;
+    --foreground: 200 15% 12%;
+    --card: 40 40% 99%;
+    --card-foreground: 200 15% 12%;
+    --popover: 40 40% 99%;
+    --popover-foreground: 200 15% 12%;
+    --primary: 32 92% 50%;
+    --primary-foreground: 200 22% 8%;
+    --secondary: 173 84% 31%;
+    --secondary-foreground: 40 40% 98%;
+    --muted: 40 30% 94%;
+    --muted-foreground: 200 10% 40%;
+    --accent: 32 90% 94%;
+    --accent-foreground: 32 92% 35%;
+    --destructive: 0 72% 50%;
+    --destructive-foreground: 40 40% 98%;
+    --border: 40 20% 86%;
+    --input: 40 20% 86%;
+    --ring: 32 92% 50%;
+    --teal: 173 84% 31%;
+    --radius: 0.75rem;
+    --font-heading: 'Cinzel', ui-serif, Georgia, serif;
+    --font-body: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'Cinzel', ui-serif, Georgia, serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    --sidebar-background: 40 40% 99%;
+    --sidebar-foreground: 200 15% 12%;
+    --sidebar-primary: 32 92% 50%;
+    --sidebar-primary-foreground: 200 22% 8%;
+    --sidebar-accent: 32 90% 94%;
+    --sidebar-accent-foreground: 32 92% 35%;
+    --sidebar-border: 40 20% 86%;
+    --sidebar-ring: 32 92% 50%;
+  }
+
+  .dark {
+    --background: 200 22% 7%;
+    --foreground: 40 30% 95%;
+    --card: 200 20% 10%;
+    --card-foreground: 40 30% 95%;
+    --popover: 200 20% 10%;
+    --popover-foreground: 40 30% 95%;
+    --primary: 38 95% 53%;
+    --primary-foreground: 200 22% 8%;
+    --secondary: 173 70% 40%;
+    --secondary-foreground: 40 30% 98%;
+    --muted: 200 18% 16%;
+    --muted-foreground: 200 12% 65%;
+    --accent: 200 18% 18%;
+    --accent-foreground: 38 95% 60%;
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 40 30% 98%;
+    --border: 200 15% 20%;
+    --input: 200 15% 20%;
+    --ring: 38 95% 53%;
+    --teal: 173 70% 42%;
+    --sidebar-background: 200 20% 10%;
+    --sidebar-foreground: 40 30% 95%;
+    --sidebar-primary: 38 95% 53%;
+    --sidebar-primary-foreground: 200 22% 8%;
+    --sidebar-accent: 200 18% 18%;
+    --sidebar-accent-foreground: 38 95% 60%;
+    --sidebar-border: 200 15% 20%;
+    --sidebar-ring: 38 95% 53%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground font-body antialiased;
+  }
+  h1, h2, h3, .font-display {
+    font-family: var(--font-heading);
+  }
+}
+
+.glass {
+  background: hsl(var(--card) / 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.scrollbar-none::-webkit-scrollbar { display: none; }
+.scrollbar-none { scrollbar-width: none; -ms-overflow-style: none; }
