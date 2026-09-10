@@ -1,13 +1,18 @@
-import { getAccessToken } from '@base44/sdk';
-
 const isNode = typeof window === 'undefined';
 
 const isClearAccessTokenRequested = () =>
 	!isNode && new URLSearchParams(window.location.search).get("clear_access_token") === 'true';
 
 const clearStoredAccessToken = () => {
-	window.localStorage.removeItem('base44_access_token');
-	window.localStorage.removeItem('token');
+	if (!isNode) {
+		window.localStorage.removeItem('access_token');
+		window.localStorage.removeItem('token');
+	}
+}
+
+const getAccessToken = () => {
+	if (isNode) return '';
+	return window.localStorage.getItem('access_token') || window.localStorage.getItem('token') || '';
 }
 
 const getAppParams = () => {
@@ -15,13 +20,12 @@ const getAppParams = () => {
 		clearStoredAccessToken();
 	}
 	return {
-		appId: import.meta.env.VITE_BASE44_APP_ID || '',
+		appId: 'bharat-yatra',
 		token: getAccessToken(),
-		functionsVersion: import.meta.env.VITE_BASE44_FUNCTIONS_VERSION || '',
-		appBaseUrl: import.meta.env.VITE_BASE44_APP_BASE_URL || '',
+		functionsVersion: 'v1',
+		appBaseUrl: '',
 	}
 }
-
 
 export const appParams = {
 	...getAppParams()

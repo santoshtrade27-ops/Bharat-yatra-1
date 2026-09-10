@@ -173,6 +173,20 @@ const dict = {
 
 const I18nContext = createContext({ lang: "en", setLang: () => {}, t: (k) => k });
 
+export const REGIONAL_LANGUAGES = [
+  { code: "en", name: "English", nativeName: "English" },
+  { code: "hi", name: "Hindi", nativeName: "हिन्दी" },
+  { code: "te", name: "Telugu", nativeName: "తెలుగు" },
+  { code: "ta", name: "Tamil", nativeName: "தமிழ்" },
+  { code: "kn", name: "Kannada", nativeName: "ಕನ್ನಡ" },
+  { code: "bn", name: "Bengali", nativeName: "বাংলা" },
+  { code: "mr", name: "Marathi", nativeName: "मराठी" },
+  { code: "gu", name: "Gujarati", nativeName: "ગુજરાતી" },
+  { code: "ml", name: "Malayalam", nativeName: "മലയാളം" },
+  { code: "pa", name: "Punjabi", nativeName: "ਪੰਜਾਬੀ" },
+  { code: "or", name: "Odia", nativeName: "ଓଡ଼ିଆ" },
+];
+
 export function I18nProvider({ children }) {
   const [lang, setLang] = useState(() => {
     if (typeof window === "undefined") return "en";
@@ -181,7 +195,15 @@ export function I18nProvider({ children }) {
   useEffect(() => localStorage.setItem("by-lang", lang), [lang]);
   const t = (key) => (dict[lang] && dict[lang][key]) || dict.en[key] || key;
   return (
-    <I18nContext.Provider value={{ lang, setLang, t, langs: ["en", "hi", "te"] }}>
+    <I18nContext.Provider 
+      value={{ 
+        lang, 
+        setLang, 
+        t, 
+        langs: ["en", "hi", "te", "ta", "kn", "bn", "mr", "gu", "ml", "pa", "or"],
+        regionalLanguages: REGIONAL_LANGUAGES,
+      }}
+    >
       {children}
     </I18nContext.Provider>
   );

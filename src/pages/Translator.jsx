@@ -1,65 +1,16 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { 
   Languages, Volume2, Wifi, WifiOff, Loader2, Mic, MicOff, ArrowLeftRight, 
-  Copy, Check, Sparkles, MessageSquare, ShieldAlert, Navigation, Utensils, 
-  IndianRupee, BookOpen, ExternalLink, AlertCircle, RefreshCw, AudioWaveform
+  Copy, Check, Sparkles, MessageSquare, BookOpen, ExternalLink, AlertCircle, 
+  AudioWaveform, Download, CheckCircle2, Search
 } from "lucide-react";
-import { phrases } from "@/lib/heritageData";
-
-const languageOptions = [
-  { code: "en", name: "English", speechLang: "en-IN", script: "English" },
-  { code: "hi", name: "Hindi", speechLang: "hi-IN", script: "हिन्दी" },
-  { code: "te", name: "Telugu", speechLang: "te-IN", script: "తెలుగు" },
-  { code: "ta", name: "Tamil", speechLang: "ta-IN", script: "தமிழ்" },
-  { code: "bn", name: "Bengali", speechLang: "bn-IN", script: "বাংলা" },
-  { code: "mr", name: "Marathi", speechLang: "mr-IN", script: "मराठी" },
-  { code: "gu", name: "Gujarati", speechLang: "gu-IN", script: "ગુજરાતી" },
-  { code: "kn", name: "Kannada", speechLang: "kn-IN", script: "ಕನ್ನಡ" },
-  { code: "ml", name: "Malayalam", speechLang: "ml-IN", script: "മലയാളം" },
-  { code: "pa", name: "Punjabi", speechLang: "pa-IN", script: "ਪੰਜਾਬੀ" },
-];
-
-// Offline Gemma Local Knowledge Bank (Instant offline lookup without internet)
-const offlineGemmaDict = {
-  "hello": {
-    hi: { text: "नमस्ते", pron: "Namaste", note: "Fold hands together gently" },
-    te: { text: "నమస్కారం", pron: "Namaskaram", note: "Respectful universal greeting" },
-    ta: { text: "வணக்கம்", pron: "Vanakkam", note: "Traditional Tamil greeting" },
-    bn: { text: "নমস্কার", pron: "Nomoshkar", note: "Bengali respectful greeting" },
-    mr: { text: "नमस्कार", pron: "Namaskar", note: "Traditional Marathi greeting" },
-  },
-  "where is the temple": {
-    hi: { text: "मंदिर कहाँ है?", pron: "Mandir kahan hai?", note: "Remove footwear before entering" },
-    te: { text: "గుడి ఎక్కడ ఉంది?", pron: "Gudi ekkada undi?", note: "Follow traditional temple dress codes" },
-    ta: { text: "கோவில் எங்கே உள்ளது?", pron: "Kovil enge ullathu?", note: "Modest attire required" },
-    bn: { text: "মন্দিরটি কোথায়?", pron: "Mandirti kothay?", note: "Respectful temple question" },
-  },
-  "where is the railway station": {
-    hi: { text: "रेलवे स्टेशन कहाँ है?", pron: "Railway station kahan hai?", note: "Auto-rickshaws use meters or prepay booth" },
-    te: { text: "రైల్వే స్టేషన్ ఎక్కడ ఉంది?", pron: "Railway station ekkada undi?", note: "Check platform boards for Vande Bharat" },
-    ta: { text: "ரயில் நிலையம் எங்கே?", pron: "Rail nilayam enge?", note: "Ask for prepaid taxi booth" },
-  },
-  "how much does this cost": {
-    hi: { text: "यह कितने का है?", pron: "Yeh kitne ka hai?", note: "Polite inquiry for market shopping" },
-    te: { text: "ఇది ఎంత ధర?", pron: "Idi entha dhara?", note: "Standard phrase for street markets" },
-    ta: { text: "இதன் விலை என்ன?", pron: "Ithan vilai enna?", note: "Standard shopping question" },
-  },
-  "please help me": {
-    hi: { text: "कृपया मेरी मदद करें", pron: "Kripya meri madad karein", note: "Emergency police or bystander assistance" },
-    te: { text: "దయచేసి నాకు సహాయం చేయండి", pron: "Dayachesi naaku sahayam cheyandi", note: "Emergency help phrase" },
-    ta: { text: "தயவுசெய்து எனக்கு உதவுங்கள்", pron: "Dayavuseithu enakku uthavungal", note: "Emergency assistance" },
-  },
-  "drinking water please": {
-    hi: { text: "कृपया पीने का पानी दीजिए", pron: "Kripya peene ka paani dijiye", note: "Ask for sealed bottled mineral water" },
-    te: { text: "దయచేసి మంచినీళ్ళు ఇవ్వండి", pron: "Dayachesi manchineellu ivvandi", note: "Pure drinking water request" },
-    ta: { text: "தயவுசெய்து குடிநீர் கொடுங்கள்", pron: "Dayavuseithu kudineer kodungal", note: "Drinking water request" },
-  },
-  "thank you": {
-    hi: { text: "धन्यवाद", pron: "Dhanyavaad", note: "Sincere gratitude" },
-    te: { text: "ధన్యవాదాలు", pron: "Dhanyavaadaalu", note: "Respectful thank you" },
-    ta: { text: "நன்றி", pron: "Nandri", note: "Heartfelt thanks" },
-  },
-};
+import { 
+  languageOptions, 
+  comprehensivePhrasebook, 
+  languageLearningBooks, 
+  translateOfflineQuery, 
+  downloadLanguageBook 
+} from "@/components/lib/languageLearningData";
 
 export default function Translator() {
   const [sourceLang, setSourceLang] = useState("en");
@@ -75,10 +26,14 @@ export default function Translator() {
   const [copied, setCopied] = useState(false);
   const [useOfflineMode, setUseOfflineMode] = useState(false);
   const [engineUsed, setEngineUsed] = useState("cloud");
+  const [phraseCategory, setPhraseCategory] = useState("All");
+  const [phraseSearch, setPhraseSearch] = useState("");
+  const [downloadSuccess, setDownloadSuccess] = useState("");
+
   const [conversation, setConversation] = useState([
     {
       sender: "system",
-      text: "Real-time bilingual translator active. Speak or type in English, Hindi, Telugu or 7 other regional languages to translate instantly.",
+      text: "Real-time bilingual translator & offline phrasebook active. Select your target language to instantly translate text, listen to native phonetics, or download local language guidebooks.",
       time: "Now",
     }
   ]);
@@ -86,7 +41,7 @@ export default function Translator() {
   const recognitionRef = useRef(null);
   const debounceTimerRef = useRef(null);
 
-  // Initialize Speech Recognition with modern browser fallback
+  // Initialize Speech Recognition
   const startSpeechRecognition = async () => {
     setMicError("");
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -97,13 +52,11 @@ export default function Translator() {
     }
 
     try {
-      // First try to check audio permission
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         try {
           await navigator.mediaDevices.getUserMedia({ audio: true });
         } catch (permErr) {
           console.warn("Media device permission warning:", permErr);
-          // Don't halt yet, let SpeechRecognition itself attempt
         }
       }
 
@@ -137,13 +90,11 @@ export default function Translator() {
         console.warn("Speech recognition error:", event.error);
         setIsListening(false);
         if (event.error === "not-allowed" || event.error === "service-not-allowed") {
-          setMicError("Microphone access was blocked by the browser. If you are viewing inside an embedded preview iframe, please click 'Open in New Window' for full direct mic access, or pick one of the quick traveler phrases below.");
+          setMicError("Microphone access was blocked by the browser. If viewing inside an iframe, click 'Open in New Window' for full direct mic access, or pick from the phrasebook below.");
         } else if (event.error === "no-speech") {
           setMicError("No speech detected. Please speak clearly into your microphone.");
-        } else if (event.error === "audio-capture") {
-          setMicError("No microphone hardware detected. Please connect a mic or headset.");
         } else {
-          setMicError(`Voice input notice (${event.error}). You can type or click 'Open in New Window'.`);
+          setMicError(`Voice notice (${event.error}). You can type directly or pick quick phrases.`);
         }
       };
 
@@ -178,18 +129,17 @@ export default function Translator() {
       return;
     }
 
-    const cleanQuery = queryText.trim().toLowerCase();
-    const targetInfo = languageOptions.find((l) => l.code === tLang) || languageOptions[2]; // Telugu default
+    const targetInfo = languageOptions.find((l) => l.code === tLang) || languageOptions[0];
     const sourceInfo = languageOptions.find((l) => l.code === sLang) || languageOptions[0];
 
-    // Check Offline Gemma Dictionary First
-    if (offlinePreference || offlineGemmaDict[cleanQuery]?.[tLang]) {
-      const match = offlineGemmaDict[cleanQuery]?.[tLang];
-      if (match) {
-        setTranslatedResult(match.text);
-        setPronunciation(match.pron);
-        setCulturalTip(match.note + " (Gemma Offline Pack)");
-        setEngineUsed("gemma-offline");
+    // Check Offline Phrasebook / Lexicon First if in Offline Mode
+    if (offlinePreference) {
+      const offlineResult = translateOfflineQuery(queryText, tLang, sLang);
+      if (offlineResult) {
+        setTranslatedResult(offlineResult.translatedText);
+        setPronunciation(offlineResult.pronunciation);
+        setCulturalTip(offlineResult.culturalNote);
+        setEngineUsed("offline-lexicon");
         return;
       }
     }
@@ -197,7 +147,7 @@ export default function Translator() {
     setIsTranslating(true);
 
     try {
-      // Call server-side API with fallback
+      // Call server-side API
       const response = await fetch("/api/ai/translate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -213,10 +163,9 @@ export default function Translator() {
         if (data.translatedText) {
           setTranslatedResult(data.translatedText);
           setPronunciation(data.pronunciation || "");
-          setCulturalTip(data.culturalNote || "Speak with respect and warmth");
+          setCulturalTip(data.culturalNote || `Cultural note: Speak with warmth and join palms in greeting.`);
           setEngineUsed(data.engine || "cloud");
 
-          // Add to conversation history
           setConversation((prev) => [
             ...prev,
             {
@@ -234,19 +183,13 @@ export default function Translator() {
       }
       throw new Error("Online translation unavailable");
     } catch {
-      // Fallback to local matching or phrasebook
-      const fallbackPhrases = phrases?.[tLang] || phrases?.hi || [];
-      const found = fallbackPhrases.find((p) => p.en?.toLowerCase().includes(cleanQuery));
-      if (found) {
-        setTranslatedResult(found.t);
-        setPronunciation(found.pron || "");
-        setCulturalTip(found.note || "Retrieved from local offline memory");
-        setEngineUsed("phrasebook");
-      } else {
-        setTranslatedResult(`[Offline Translation]: "${queryText}" in ${targetInfo.name}`);
-        setPronunciation("Pronounce clearly at normal speed");
-        setCulturalTip("Enable online mode or pick standard phrasebook below for real-time AI.");
-        setEngineUsed("offline-echo");
+      // Robust Offline Fallback Engine
+      const offlineFallback = translateOfflineQuery(queryText, tLang, sLang);
+      if (offlineFallback) {
+        setTranslatedResult(offlineFallback.translatedText);
+        setPronunciation(offlineFallback.pronunciation);
+        setCulturalTip(offlineFallback.culturalNote);
+        setEngineUsed(offlineFallback.engine);
       }
     } finally {
       setIsTranslating(false);
@@ -263,7 +206,7 @@ export default function Translator() {
 
     debounceTimerRef.current = setTimeout(() => {
       performTranslation(inputText, sourceLang, targetLang, useOfflineMode);
-    }, 450);
+    }, 400);
 
     return () => {
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
@@ -276,11 +219,11 @@ export default function Translator() {
     try {
       window.speechSynthesis.cancel();
       const langObj = languageOptions.find((l) => l.code === langCode);
-      const utterance = new SpeechSynthesisUtterance(textToSpeak);
+      const cleanText = textToSpeak.replace(/\[.*?\]/g, "").replace(/\(.*?\)/g, "").trim();
+      const utterance = new SpeechSynthesisUtterance(cleanText);
       utterance.lang = langObj?.speechLang || "hi-IN";
       utterance.rate = 0.85;
 
-      // Select matching voice if available
       const voices = window.speechSynthesis.getVoices();
       const regionalVoice = voices.find((v) => v.lang.startsWith(langObj?.speechLang?.slice(0, 2) || "hi"));
       if (regionalVoice) {
@@ -313,35 +256,57 @@ export default function Translator() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleDownloadBook = (bookId, title) => {
+    downloadLanguageBook(bookId);
+    setDownloadSuccess(`Generated printable guide for ${title}! Check your browser downloads or print preview.`);
+    setTimeout(() => setDownloadSuccess(""), 4500);
+  };
+
+  const categories = ["All", "Greetings & Politeness", "Directions & Transport", "Shopping & Handloom", "Food & Dining", "Emergency & Safety"];
+
+  const filteredPhrases = comprehensivePhrasebook.filter((p) => {
+    const matchCat = phraseCategory === "All" || p.category === phraseCategory;
+    const matchSearch = !phraseSearch || p.en.toLowerCase().includes(phraseSearch.toLowerCase()) ||
+      p.translations[targetLang]?.script?.toLowerCase().includes(phraseSearch.toLowerCase()) ||
+      p.translations[targetLang]?.pron?.toLowerCase().includes(phraseSearch.toLowerCase());
+    return matchCat && matchSearch;
+  });
+
+  const currentTargetLangObj = languageOptions.find((l) => l.code === targetLang) || languageOptions[0];
+
   return (
     <div className="space-y-8 pb-16">
-      {/* Header */}
+      {/* Header Banner */}
       <section className="bg-card border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2 text-foreground">
-                <Languages className="w-6 sm:w-7 h-6 sm:h-7 text-primary" /> Real-Time Cultural Voice & Text Translator
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-bold uppercase tracking-wider">
+                  Offline & Online Voice Matrix
+                </span>
+                <span className="text-xs text-muted-foreground">· 10 Regional Languages</span>
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2 text-foreground mt-1.5">
+                <Languages className="w-6 sm:w-7 h-6 sm:h-7 text-primary" /> Cultural Voice Translator & Phrasebook
               </h1>
-              <p className="text-muted-foreground mt-1.5 text-xs sm:text-sm">
-                Instant speech-to-speech translation with native script, phonetic guide & offline Gemma fallback.
+              <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
+                Translate with authentic native scripts, phonetic guides, offline phrasebooks and downloadable language learning eBooks.
               </p>
             </div>
 
             <div className="flex items-center gap-2 flex-wrap">
-              {/* Open in New Window Button (critical for iframe mic access) */}
               <a
                 href={window.location.href}
                 target="_blank"
                 rel="noreferrer"
-                className="px-3.5 py-2 rounded-2xl bg-muted border border-border text-foreground hover:bg-muted/80 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm"
-                title="Opens app in full browser window where microphone and speech APIs have unrestricted access"
+                className="px-3.5 py-2 rounded-2xl bg-muted border border-border text-foreground hover:bg-muted/80 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-xs"
+                title="Opens app in a full browser tab for unrestricted microphone and speech access"
               >
                 <ExternalLink className="w-3.5 h-3.5 text-primary" />
-                <span>Open in New Tab</span>
+                <span>Open in Full Tab</span>
               </a>
 
-              {/* Offline Mode Switch */}
               <button
                 onClick={() => setUseOfflineMode(!useOfflineMode)}
                 className={`px-3.5 py-2 rounded-2xl flex items-center gap-2 text-xs font-bold transition-all border ${
@@ -351,57 +316,55 @@ export default function Translator() {
                 }`}
               >
                 {useOfflineMode ? <WifiOff className="w-3.5 h-3.5 text-amber-500" /> : <Wifi className="w-3.5 h-3.5 text-emerald-500" />}
-                <span>{useOfflineMode ? "Offline Gemma Mode" : "Online AI (Active)"}</span>
+                <span>{useOfflineMode ? "Offline Pack (Active)" : "Online AI (Active)"}</span>
               </button>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Main Translation Arena */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6">
-        {/* Mic Permission / Notice Banner */}
+      {/* Main Container */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
+        {/* Download Notice */}
+        {downloadSuccess && (
+          <div className="p-4 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs font-medium flex items-center gap-2 animate-fadeIn">
+            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+            <span>{downloadSuccess}</span>
+          </div>
+        )}
+
+        {/* Mic Permission Banner */}
         {micError && (
           <div className="p-4 rounded-2xl bg-destructive/10 border border-destructive/30 text-destructive text-xs font-medium flex items-start justify-between gap-3">
             <div className="flex items-start gap-2.5">
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
               <div>
-                <p className="font-bold">Microphone Status</p>
+                <p className="font-bold">Microphone Note</p>
                 <p className="mt-0.5 leading-relaxed">{micError}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <a
-                href={window.location.href}
-                target="_blank"
-                rel="noreferrer"
-                className="px-2.5 py-1 rounded-xl bg-destructive text-destructive-foreground text-[11px] font-bold hover:opacity-90"
-              >
-                Open in New Tab
-              </a>
-              <button
-                onClick={() => setMicError("")}
-                className="text-xs text-muted-foreground hover:text-foreground px-2 py-1"
-              >
-                Dismiss
-              </button>
-            </div>
+            <button
+              onClick={() => setMicError("")}
+              className="text-xs text-muted-foreground hover:text-foreground px-2 py-1"
+            >
+              Dismiss
+            </button>
           </div>
         )}
 
-        {/* Language Bar */}
-        <div className="p-4 rounded-3xl bg-card border border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+        {/* Language Selection Bar */}
+        <div className="p-4 rounded-3xl bg-card border border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
           {/* Source Lang */}
           <div className="flex items-center gap-2 flex-1">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">From:</span>
+            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">From:</span>
             <select
               value={sourceLang}
               onChange={(e) => setSourceLang(e.target.value)}
-              className="w-full sm:w-auto px-3.5 py-2 rounded-xl bg-background border border-border text-xs sm:text-sm font-bold text-foreground outline-none focus:ring-2 focus:ring-primary"
+              className="w-full sm:w-auto px-3.5 py-2.5 rounded-xl bg-background border border-border text-xs sm:text-sm font-bold text-foreground outline-none focus:ring-2 focus:ring-primary cursor-pointer"
             >
               {languageOptions.map((l) => (
                 <option key={l.code} value={l.code}>
-                  {l.name} ({l.script})
+                  {l.name} ({l.nativeName})
                 </option>
               ))}
             </select>
@@ -410,7 +373,7 @@ export default function Translator() {
           {/* Swap Button */}
           <button
             onClick={swapLanguages}
-            className="p-2.5 rounded-full bg-muted text-foreground hover:bg-muted/80 border border-border mx-auto transition-transform active:scale-95"
+            className="p-2.5 rounded-full bg-muted text-foreground hover:bg-muted/80 border border-border mx-auto transition-transform active:scale-95 cursor-pointer"
             title="Swap Source & Target Languages"
           >
             <ArrowLeftRight className="w-4 h-4 text-primary" />
@@ -418,11 +381,11 @@ export default function Translator() {
 
           {/* Target Lang */}
           <div className="flex items-center gap-2 flex-1 justify-end">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">To:</span>
+            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">To (Target Script):</span>
             <select
               value={targetLang}
               onChange={(e) => setTargetLang(e.target.value)}
-              className="w-full sm:w-auto px-3.5 py-2 rounded-xl bg-background border border-border text-xs sm:text-sm font-bold text-foreground outline-none focus:ring-2 focus:ring-primary"
+              className="w-full sm:w-auto px-3.5 py-2.5 rounded-xl bg-background border border-border text-xs sm:text-sm font-bold text-primary outline-none focus:ring-2 focus:ring-primary cursor-pointer"
             >
               {languageOptions.map((l) => (
                 <option key={l.code} value={l.code}>
@@ -433,10 +396,10 @@ export default function Translator() {
           </div>
         </div>
 
-        {/* Input and Output Boxes */}
+        {/* Input and Output Translation Grid */}
         <div className="grid md:grid-cols-2 gap-6">
           {/* Source Input Box */}
-          <div className="p-6 rounded-3xl bg-card border border-border flex flex-col justify-between space-y-4 shadow-sm relative">
+          <div className="p-6 rounded-3xl bg-card border border-border flex flex-col justify-between space-y-4 shadow-xs relative">
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
@@ -445,7 +408,7 @@ export default function Translator() {
                 {inputText && (
                   <button
                     onClick={() => setInputText("")}
-                    className="text-xs text-muted-foreground hover:text-foreground"
+                    className="text-xs text-muted-foreground hover:text-foreground cursor-pointer"
                   >
                     Clear
                   </button>
@@ -460,13 +423,12 @@ export default function Translator() {
                     ? "ఇక్కడ మాట్లాడండి లేదా టైప్ చేయండి (ఉదా: 'రైల్వే స్టేషన్ ఎక్కడ ఉంది?')"
                     : sourceLang === "hi"
                     ? "यहाँ बोलें या टाइप करें (उदा: 'मंदिर कहाँ है?')"
-                    : "Speak or type in English (e.g. 'Where is the beach in Visakhapatnam?')"
+                    : "Speak or type in English (e.g. 'How much does this cost?', 'Where is the temple?')"
                 }
                 rows={5}
                 className="w-full bg-transparent text-foreground placeholder:text-muted-foreground/60 text-base sm:text-lg font-medium outline-none resize-none"
               />
 
-              {/* Real-time Listening Wave Animation */}
               {isListening && (
                 <div className="flex items-center gap-2 p-2.5 rounded-xl bg-destructive/10 text-destructive text-xs font-semibold animate-pulse">
                   <AudioWaveform className="w-4 h-4 animate-spin" />
@@ -481,7 +443,7 @@ export default function Translator() {
                 <button
                   type="button"
                   onClick={isListening ? stopSpeechRecognition : startSpeechRecognition}
-                  className={`px-4 py-2.5 rounded-full flex items-center gap-2 text-xs font-bold transition-all shadow-md ${
+                  className={`px-4 py-2.5 rounded-full flex items-center gap-2 text-xs font-bold transition-all shadow-xs cursor-pointer ${
                     isListening
                       ? "bg-destructive text-destructive-foreground ring-2 ring-destructive ring-offset-2 animate-pulse"
                       : "bg-primary text-primary-foreground hover:opacity-90"
@@ -493,7 +455,7 @@ export default function Translator() {
                     </>
                   ) : (
                     <>
-                      <Mic className="w-4 h-4" /> Speak via Microphone
+                      <Mic className="w-4 h-4" /> Speak via Mic
                     </>
                   )}
                 </button>
@@ -501,30 +463,12 @@ export default function Translator() {
                 {inputText && (
                   <button
                     onClick={() => speakText(inputText, sourceLang)}
-                    className="p-2.5 rounded-full bg-muted text-foreground hover:bg-muted/80 transition-colors"
+                    className="p-2.5 rounded-full bg-muted text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
                     title="Play Audio"
                   >
                     <Volume2 className="w-4 h-4" />
                   </button>
                 )}
-
-                <button
-                  onClick={() => {
-                    const testPhrases = [
-                      "Where is the nearest temple?",
-                      "How much for an auto to the railway station?",
-                      "Can you help me in an emergency?",
-                      "Drinking water please",
-                    ];
-                    const randomPhrase = testPhrases[Math.floor(Math.random() * testPhrases.length)];
-                    setInputText(randomPhrase);
-                    performTranslation(randomPhrase, sourceLang, targetLang, useOfflineMode);
-                  }}
-                  className="px-3 py-1.5 rounded-full bg-muted text-muted-foreground hover:text-foreground text-[11px] font-semibold flex items-center gap-1"
-                  title="Test translation with sample traveler voice text"
-                >
-                  <RefreshCw className="w-3 h-3" /> Quick Sample
-                </button>
               </div>
 
               <span className="text-[11px] text-muted-foreground font-mono">
@@ -534,12 +478,12 @@ export default function Translator() {
           </div>
 
           {/* Target Output Box */}
-          <div className="p-6 rounded-3xl bg-card border border-border flex flex-col justify-between space-y-4 shadow-sm relative">
+          <div className="p-6 rounded-3xl bg-card border border-border flex flex-col justify-between space-y-4 shadow-xs relative">
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-1.5">
                   <Sparkles className="w-3.5 h-3.5" />
-                  {languageOptions.find((l) => l.code === targetLang)?.name} Translation
+                  {currentTargetLangObj.name} Script & Meaning
                 </span>
                 {isTranslating && (
                   <span className="text-xs text-primary flex items-center gap-1 font-semibold">
@@ -557,21 +501,21 @@ export default function Translator() {
 
                     {pronunciation && (
                       <p className="text-xs sm:text-sm font-mono text-primary font-semibold">
-                        Phonetics: "{pronunciation}"
+                        Phonetic Guide: "{pronunciation}"
                       </p>
                     )}
 
                     {culturalTip && (
                       <div className="p-3 rounded-2xl bg-muted/60 border border-border text-xs text-muted-foreground mt-2">
-                        <strong className="text-foreground">Cultural Etiquette:</strong> {culturalTip}
+                        <strong className="text-foreground">Cultural Nuance:</strong> {culturalTip}
                       </div>
                     )}
                   </div>
                 ) : (
                   <p className="text-muted-foreground/60 text-sm italic pt-6">
                     {isListening
-                      ? "Listening to your voice... translation will appear automatically."
-                      : "Translation will appear here in real-time as you speak or type."}
+                      ? "Listening to voice input... translation will appear automatically."
+                      : "Translation in authentic native script & phonetics will appear here in real-time."}
                   </p>
                 )}
               </div>
@@ -584,14 +528,14 @@ export default function Translator() {
                   <>
                     <button
                       onClick={() => speakText(translatedResult, targetLang)}
-                      className="px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center gap-1.5 hover:opacity-90 transition-all shadow-sm"
+                      className="px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center gap-1.5 hover:opacity-90 transition-all shadow-xs cursor-pointer"
                     >
                       <Volume2 className="w-4 h-4" /> Listen Native
                     </button>
 
                     <button
                       onClick={copyToClipboard}
-                      className="p-2.5 rounded-full bg-muted text-foreground hover:bg-muted/80 transition-colors"
+                      className="p-2.5 rounded-full bg-muted text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
                       title="Copy to clipboard"
                     >
                       {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
@@ -601,60 +545,215 @@ export default function Translator() {
               </div>
 
               <span className="text-[11px] text-muted-foreground">
-                Engine: {engineUsed === "gemma-offline" ? "Gemma Local" : engineUsed === "universal-gtx" ? "Universal AI" : "Gemini AI"}
+                Engine: {engineUsed.includes("offline") ? "Offline Regional Pack" : "Gemini Multilingual AI"}
               </span>
             </div>
           </div>
         </div>
 
-        {/* Quick Essential Tourist Phrases (One-Tap Speak & Translate) */}
-        <div className="p-6 rounded-3xl bg-card border border-border space-y-4">
-          <div className="flex items-center justify-between">
+        {/* SECTION 1: INTERACTIVE CATEGORIZED PHRASEBOOK WITH SCRIPT & STATEMENT */}
+        <div className="p-6 rounded-3xl bg-card border border-border space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h3 className="text-base font-bold text-foreground flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-primary" /> Instant Travel & Emergency Phrases
-              </h3>
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-bold uppercase">
+                  Statement & Native Script Phrasebook
+                </span>
+              </div>
+              <h2 className="text-lg sm:text-xl font-bold text-foreground mt-1 flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-primary" /> Instant {currentTargetLangObj.name} Phrasebook ({currentTargetLangObj.script})
+              </h2>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Tap any essential query to immediately hear native pronunciation
+                Each phrase below displays the English statement, target native script, phonetic pronunciation, and audio speech.
+              </p>
+            </div>
+
+            {/* Search Input */}
+            <div className="relative w-full sm:w-64">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <input
+                type="text"
+                value={phraseSearch}
+                onChange={(e) => setPhraseSearch(e.target.value)}
+                placeholder="Search statement or words..."
+                className="w-full pl-9 pr-3 py-2 rounded-xl bg-background border border-border text-xs outline-none focus:ring-2 focus:ring-primary text-foreground"
+              />
+            </div>
+          </div>
+
+          {/* Category Filter Pills */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none text-xs">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setPhraseCategory(cat)}
+                className={`px-3.5 py-2 rounded-2xl transition-all shrink-0 font-semibold cursor-pointer ${
+                  phraseCategory === cat
+                    ? "bg-primary text-primary-foreground shadow-xs"
+                    : "bg-muted/60 text-muted-foreground hover:text-foreground hover:bg-muted"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
+          {/* Phrases Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {filteredPhrases.map((phrase) => {
+              const trans = phrase.translations[targetLang] || phrase.translations["te"] || phrase.translations["hi"];
+              return (
+                <div
+                  key={phrase.id}
+                  className="p-5 rounded-3xl bg-muted/40 border border-border space-y-3 hover:border-primary/50 transition-all flex flex-col justify-between"
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-primary uppercase tracking-wider">
+                        {phrase.category}
+                      </span>
+                      <button
+                        onClick={() => speakText(trans?.script || "", targetLang)}
+                        className="p-2 rounded-full bg-card hover:bg-muted border border-border text-foreground transition-colors cursor-pointer"
+                        title="Listen to native voice pronunciation"
+                      >
+                        <Volume2 className="w-3.5 h-3.5 text-primary" />
+                      </button>
+                    </div>
+
+                    {/* Statement in English */}
+                    <div>
+                      <span className="text-[11px] text-muted-foreground block font-medium">English Statement:</span>
+                      <h4 className="text-sm sm:text-base font-bold text-foreground">"{phrase.en}"</h4>
+                    </div>
+
+                    {/* Translated Native Script */}
+                    <div className="p-3 rounded-2xl bg-card border border-border space-y-1">
+                      <span className="text-[10px] font-bold text-primary uppercase">
+                        {currentTargetLangObj.name} Script:
+                      </span>
+                      <p className="text-lg sm:text-xl font-bold text-foreground font-heading leading-relaxed">
+                        {trans?.script}
+                      </p>
+                      <p className="text-xs font-mono text-primary font-semibold">
+                        Pronunciation: "{trans?.pron}"
+                      </p>
+                    </div>
+
+                    {/* Etiquette Tip */}
+                    {trans?.tip && (
+                      <p className="text-[11px] text-muted-foreground italic">
+                        <strong>Tip:</strong> {trans.tip}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center justify-between pt-2 border-t border-border/60 text-xs">
+                    <button
+                      onClick={() => {
+                        setInputText(phrase.en);
+                        performTranslation(phrase.en, "en", targetLang, useOfflineMode);
+                      }}
+                      className="text-primary font-bold hover:underline cursor-pointer"
+                    >
+                      Use in Voice Translator →
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(`${trans?.script} (${trans?.pron})`);
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 2000);
+                      }}
+                      className="text-muted-foreground hover:text-foreground flex items-center gap-1 cursor-pointer text-[11px]"
+                    >
+                      <Copy className="w-3 h-3" /> Copy Script
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* SECTION 2: DOWNLOAD LOCAL LANGUAGE LEARNING BOOKS & EBOOKS */}
+        <div className="p-6 rounded-3xl bg-card border border-border space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 text-[11px] font-bold uppercase">
+                  Downloadable eBooks & Guides
+                </span>
+                <span className="text-xs text-muted-foreground">· 8 Regional Editions</span>
+              </div>
+              <h2 className="text-lg sm:text-xl font-bold text-foreground mt-1 flex items-center gap-2">
+                <Download className="w-5 h-5 text-primary" /> Local Language Learning Books (Printable Guides & eBooks)
+              </h2>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Download verified language learning pocketbooks with alphabet charts, numbers 1-1,000, and travel conversations for offline study.
               </p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
-            {[
-              { en: "Where is the temple?", icon: Navigation, cat: "Directions" },
-              { en: "How much does this cost?", icon: IndianRupee, cat: "Market" },
-              { en: "Where is the railway station?", icon: Navigation, cat: "Transit" },
-              { en: "Drinking water please", icon: Utensils, cat: "Food" },
-              { en: "Please help me", icon: ShieldAlert, cat: "Emergency" },
-              { en: "Thank you very much", icon: Sparkles, cat: "Courtesy" },
-            ].map((p, i) => (
-              <button
-                key={i}
-                onClick={() => {
-                  setInputText(p.en);
-                  performTranslation(p.en, "en", targetLang, useOfflineMode);
-                }}
-                className="p-3.5 rounded-2xl bg-muted/40 hover:bg-muted/80 border border-border text-left flex items-center justify-between group transition-colors"
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {languageLearningBooks.map((book) => (
+              <div
+                key={book.id}
+                className="p-6 rounded-3xl bg-muted/40 border border-border flex flex-col justify-between space-y-5 hover:border-primary/50 transition-all shadow-xs"
               >
-                <div className="flex items-center gap-2.5">
-                  <p.icon className="w-4 h-4 text-primary shrink-0" />
-                  <div>
-                    <p className="font-bold text-foreground group-hover:text-primary transition-colors">{p.en}</p>
-                    <span className="text-[10px] text-muted-foreground">{p.cat}</span>
+                <div className="space-y-3">
+                  {/* Book Cover Banner */}
+                  <div className={`p-4 rounded-2xl bg-gradient-to-br ${book.coverColor} text-white space-y-1 shadow-sm`}>
+                    <span className="text-[10px] font-bold uppercase tracking-wider bg-black/20 px-2 py-0.5 rounded-md inline-block">
+                      {book.badge}
+                    </span>
+                    <h3 className="font-bold text-base sm:text-lg leading-tight mt-1">{book.title}</h3>
+                    <p className="text-[11px] text-white/90">{book.subtitle}</p>
+                  </div>
+
+                  <div className="flex items-center justify-between text-[11px] text-muted-foreground font-mono">
+                    <span>{book.pages}</span>
+                    <span>{book.size}</span>
+                  </div>
+
+                  {/* Core Chapters */}
+                  <div className="space-y-1 text-xs">
+                    <span className="text-[11px] font-bold text-foreground uppercase tracking-wider block mb-1">
+                      Included Chapters:
+                    </span>
+                    {book.chapters.slice(0, 4).map((ch, idx) => (
+                      <p key={idx} className="text-muted-foreground leading-relaxed flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+                        <span className="truncate">{ch}</span>
+                      </p>
+                    ))}
+                    {book.chapters.length > 4 && (
+                      <p className="text-[11px] text-primary font-semibold">
+                        + {book.chapters.length - 4} more chapters & alphabet charts
+                      </p>
+                    )}
                   </div>
                 </div>
-                <span className="text-[11px] text-primary font-semibold">Translate →</span>
-              </button>
+
+                <div className="pt-2 border-t border-border">
+                  <button
+                    type="button"
+                    onClick={() => handleDownloadBook(book.id, book.title)}
+                    className="w-full py-2.5 rounded-full bg-primary text-primary-foreground font-bold text-xs shadow-xs hover:opacity-90 flex items-center justify-center gap-2 transition-all cursor-pointer"
+                  >
+                    <Download className="w-3.5 h-3.5" /> Download Printable Guidebook
+                  </button>
+                </div>
+              </div>
             ))}
           </div>
         </div>
 
-        {/* Recent Conversation History Log */}
+        {/* SECTION 3: RECENT CONVERSATION HISTORY */}
         {conversation.length > 1 && (
           <div className="p-6 rounded-3xl bg-card border border-border space-y-4">
             <h3 className="text-base font-bold text-foreground flex items-center gap-2">
-              <MessageSquare className="w-4 h-4 text-primary" /> Live Dialogue History
+              <MessageSquare className="w-4 h-4 text-primary" /> Live Translation Transcript
             </h3>
             <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
               {conversation.filter((c) => c.sender === "user").map((msg, idx) => (

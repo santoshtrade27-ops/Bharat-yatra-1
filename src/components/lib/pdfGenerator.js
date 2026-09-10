@@ -127,18 +127,32 @@ export function generateTripVoucherPDF(booking) {
   }
 
   // Section: Transport Details
-  printSectionTitle("2. CONFIRMED TRANSPORTATION FACILITY");
-  printRow("Mode of Transport", booking.transport || "Vande Bharat Express / Train");
+  printSectionTitle("2. CONFIRMED TRANSPORTATION & LOCAL TRANSIT");
+  printRow("Intercity Transport", booking.transport || "Vande Bharat Express / Train");
   if (booking.transport_code || booking.transport_facility) {
     printRow("Facility / Service No.", `${booking.transport_facility || ""} (${booking.transport_code || ""})`);
   }
   if (booking.transport_timing) {
     printRow("Boarding Timing", booking.transport_timing);
   }
+  if (booking.local_transit) {
+    const transitName = typeof booking.local_transit === "object" ? booking.local_transit.name : booking.local_transit;
+    printRow("Sightseeing Transit", transitName);
+  }
   printRow("Reporting Guideline", "Please arrive at railway station/airport 45 minutes prior to scheduled departure with Gov ID.");
 
+  // Section: Heritage Guide Details (if assigned)
+  if (booking.selected_guide || booking.with_guide) {
+    printSectionTitle("3. ASI LICENSED HERITAGE GUIDE");
+    const guide = booking.selected_guide || {};
+    printRow("Guide Name", guide.name || "Government Licensed Heritage Guide");
+    if (guide.badge) printRow("ASI Badge No.", guide.badge);
+    if (guide.specialty) printRow("Specialty & Focus", guide.specialty);
+    if (guide.languages) printRow("Languages Spoken", Array.isArray(guide.languages) ? guide.languages.join(", ") : guide.languages);
+  }
+
   // Section: Hotel Accommodation
-  printSectionTitle("3. HOTEL ACCOMMODATION & CHECK-IN");
+  printSectionTitle("4. HOTEL ACCOMMODATION & CHECK-IN");
   const hotel = booking.hotel || {};
   printRow("Hotel Property", hotel.name || "Government-Recognized Heritage Property");
   printRow("Location & City", `${hotel.location || ""}, ${hotel.city || booking.destination}`);
@@ -148,7 +162,7 @@ export function generateTripVoucherPDF(booking) {
 
   // Section: Day-by-Day Itinerary
   if (Array.isArray(booking.itinerary) && booking.itinerary.length > 0) {
-    printSectionTitle("4. DAY-BY-DAY CULTURAL ITINERARY");
+    printSectionTitle("5. DAY-BY-DAY CULTURAL ITINERARY");
     booking.itinerary.forEach((item, idx) => {
       y = checkPageBreak(doc, y, 18);
       doc.setFont("helvetica", "bold");
@@ -167,7 +181,7 @@ export function generateTripVoucherPDF(booking) {
   }
 
   // Section: Important Travel Tips & Helpline
-  printSectionTitle("5. OFFICIAL VISITOR SAFETY ADVISORY");
+  printSectionTitle("6. OFFICIAL VISITOR SAFETY ADVISORY");
   y = checkPageBreak(doc, y, 20);
   const notices = [
     "• Carry original government-issued photo identity proof (Aadhaar / Voter ID / Passport) for monument entry.",
@@ -406,3 +420,158 @@ export function generatePhrasebookPDF(langName, categories) {
 
   doc.save(`BharatYatra_Phrasebook_${langName}.pdf`);
 }
+
+/**
+ * 5. Official Personal Safety & Emergency Kit PDF
+ */
+export function generateSafetyKitPDF(reg, settings, scams = [], volunteers = []) {
+  const doc = setupDoc();
+  let y = addHeader(
+    doc,
+    `TOURIST SAFETY & EMERGENCY KIT — ${reg.destination?.toUpperCase() || "HERITAGE JOURNEY"}`,
+    `Registration ID: ${reg.id || "SOS-REG"} · Traveler: ${reg.name} · Trip Type: ${reg.tripType || "Individual"}`
+  );
+
+  const printSectionTitle = (title) => {
+    y = checkPageBreak(doc, y, 16);
+    doc.setFillColor(241, 245, 249);
+    doc.rect(14, y - 4, 182, 8, "F");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.setTextColor(180, 83, 9);
+    doc.text(title, 17, y + 2);
+    y += 9;
+    doc.setTextColor(51, 65, 85);
+    doc.setFont("helvetica", "normal");
+  };
+
+  // 1. Registered Traveler Profile
+  printSectionTitle("1. REGISTERED TRAVELER PROFILE & TRIP DETAILS");
+  doc.setFontSize(9.5);
+  doc.text(`Traveler Name: ${reg.name}`, 17, y);
+  doc.text(`Mobile / WhatsApp: ${reg.phone}`, 110, y);
+  y += 5.5;
+  doc.text(`Destination Circuit: ${reg.destination} (${reg.state || "India"})`, 17, y);
+  doc.text(`Trip Type: ${reg.tripType || "Standard"} (${reg.days || 3} Days)`, 110, y);
+  y += 5.5;
+  doc.text(`Travel Start Date: ${reg.travelDate || "Active"}`, 17, y);
+  doc.text(`Purpose of Visit: ${reg.purpose || "Heritage Tourism"}`, 110, y);
+  y += 5.5;
+  if (reg.ticketInfo) {
+    doc.text(`Transport / Ticket PNR: ${reg.ticketInfo}`, 17, y);
+    y += 5.5;
+  }
+  doc.text(`Emergency Contacts: ${reg.emergencyContacts || "Not specified"}`, 17, y);
+  y += 5.5;
+  if (reg.localContacts) {
+    doc.text(`Local / Hotel Contact: ${reg.localContacts}`, 17, y);
+    y += 5.5;
+  }
+  doc.text(`Scheduled Daily Check-in: ${reg.checkInTime || "Every 4 Hours"}`, 17, y);
+  y += 5.5;
+  if (reg.specialInstructions) {
+    doc.text(`Special Safety Instructions: ${reg.specialInstructions}`, 17, y);
+    y += 6;
+  }
+  y += 3;
+
+  // 2. 24/7 National Emergency Helplines
+  printSectionTitle("2. 24/7 VERIFIED EMERGENCY HOTLINES (TOLL-FREE)");
+  doc.setFontSize(9);
+  doc.text("• 112 — National Unified Emergency Response (Police, Fire & Ambulance)", 17, y);
+  y += 5;
+  doc.text("• 1363 — National Tourist Police Helpline (24/7 Multilingual Ministry of Tourism)", 17, y);
+  y += 5;
+  doc.text("• 108 — Free Advanced Life Support Trauma Ambulance", 17, y);
+  y += 5;
+  doc.text("• 1091 — Women Safety & Rapid Anti-Harassment Police Patrol", 17, y);
+  y += 5;
+  doc.text("• 1033 — National Highway Emergency & Breakdown Towing Assistance", 17, y);
+  y += 5;
+  doc.text("• 1930 — Cyber Crime & Instant UPI Fraud Financial Freeze", 17, y);
+  y += 8;
+
+  // 3. Local Volunteer Contacts
+  if (volunteers && volunteers.length > 0) {
+    printSectionTitle("3. LOCAL ON-CALL VERIFIED VOLUNTEERS");
+    volunteers.slice(0, 4).forEach((v) => {
+      y = checkPageBreak(doc, y, 10);
+      doc.setFont("helvetica", "bold");
+      doc.text(`• ${v.name} (${v.city}, ${v.state}) — Tel: ${v.phone}`, 17, y);
+      doc.setFont("helvetica", "normal");
+      y += 4.5;
+      doc.text(`  Role: ${v.emergencyRole || v.specialization}`, 17, y);
+      y += 5;
+    });
+    y += 3;
+  }
+
+  // 4. Map & Community Links
+  printSectionTitle("4. MAP NAVIGATION & WHATSAPP SAFETY COMMUNITY");
+  doc.setFontSize(9);
+  const mapLink = reg.destination 
+    ? `https://www.google.com/maps/search/${encodeURIComponent(reg.destination)}` 
+    : "https://www.google.com/maps";
+  doc.text(`• Google Maps Live Navigation: ${mapLink}`, 17, y);
+  y += 5;
+  doc.text(`• Offline Geo-Maps (OpenStreetMap / Organic Maps): https://organicmaps.app/`, 17, y);
+  y += 5;
+  const waGroup = settings?.whatsappGroups?.[reg.destination] || settings?.whatsappGroups?.[reg.state] || settings?.whatsappGroups?.["All India"] || "https://chat.whatsapp.com/invite/BharatYatraNationalSOS";
+  doc.text(`• Verified Regional WhatsApp Safety Group: ${waGroup}`, 17, y);
+  y += 8;
+
+  // 5. Scams Advisory & Network Coverage
+  printSectionTitle("5. LOCAL SCAM ADVISORIES & NETWORK GUIDANCE");
+  if (scams && scams.length > 0) {
+    scams.slice(0, 3).forEach((s) => {
+      y = checkPageBreak(doc, y, 14);
+      doc.setFont("helvetica", "bold");
+      doc.text(`• [${s.riskLevel} Risk] ${s.title} (${s.city || reg.destination})`, 17, y);
+      doc.setFont("helvetica", "normal");
+      y += 4.5;
+      doc.text(`  Warning: ${s.warning}`, 17, y, { maxWidth: 175 });
+      y += 6;
+      doc.text(`  Safety Counter-measure: ${s.counterMeasure}`, 17, y, { maxWidth: 175 });
+      y += 6;
+    });
+  } else {
+    doc.text("• Always hire ASI authorized guides with holographic badges.", 17, y);
+    y += 5;
+    doc.text("• Use government-approved prepaid taxi / auto booths at airports and railway stations.", 17, y);
+    y += 5;
+  }
+  y += 3;
+  doc.setFont("helvetica", "bold");
+  doc.text("Network Coverage Advice:", 17, y);
+  doc.setFont("helvetica", "normal");
+  y += 4.5;
+  doc.text("Jio and Airtel have strong 4G/5G in cities. Ghat & high-altitude forest trails (Araku/Simhachalam/Hills) may have patchy data. Enable Offline GPS in your maps app.", 17, y, { maxWidth: 175 });
+  y += 9;
+
+  // 6. Emergency "Find My Device" Credentials
+  printSectionTitle("6. EMERGENCY FIND MY DEVICE RECOVERY CREDENTIALS");
+  doc.setFontSize(9);
+  doc.text("In case your smartphone is lost, stranded in remote terrain, or stolen while traveling,", 17, y);
+  y += 4.5;
+  doc.text("our Safety Command Center can access offline satellite telemetry using these credentials:", 17, y);
+  y += 6;
+
+  doc.setFillColor(254, 242, 242);
+  doc.rect(17, y - 2, 175, 18, "F");
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(220, 38, 38);
+  doc.text(`Emergency SOS Portal ID: ${settings?.findMyDeviceEmail || "sos.safety@bharatyatra.gov.in"}`, 22, y + 4);
+  doc.text(`SOS Recovery Security Token: ${settings?.findMyDevicePassword || "BY-SOS-SECURE-2026#PROTECT"}`, 22, y + 10);
+  doc.setTextColor(51, 65, 85);
+  doc.setFont("helvetica", "normal");
+  y += 24;
+
+  const totalPages = doc.internal.getNumberOfPages();
+  for (let i = 1; i <= totalPages; i++) {
+    doc.setPage(i);
+    addFooter(doc, i, totalPages);
+  }
+
+  doc.save(`BharatYatra_SafetyKit_${reg.name?.replace(/\s+/g, "_") || "Traveler"}.pdf`);
+}
+

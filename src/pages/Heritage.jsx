@@ -19,21 +19,85 @@ export default function Heritage() {
   const [storyCat, setStoryCat] = useState("All");
 
   // Merge enriched heritage sites with legacy heritage sites (avoiding duplicates)
-  const allSites = [...enrichedHeritageSites];
-  heritageSites.forEach(s => {
-    if (!allSites.some(es => es.id === s.id || es.name.toLowerCase() === s.name.toLowerCase())) {
-      allSites.push({
-        ...s,
-        rating: 4.6,
-        reviewsCount: 1200,
-        timings: "09:00 AM - 05:30 PM",
-        crowdDensity: "Moderate",
-        dressCode: "Modest casual attire",
-        frequentScams: "Always verify licensed ASI guides. Refuse unauthorized street vendors.",
-        safetyTips: "Stay on designated paved paths and carry drinking water."
-      });
-    }
+  const [allSites, setAllSites] = useState(() => {
+    const list = [...enrichedHeritageSites];
+    heritageSites.forEach(s => {
+      if (!list.some(es => es.id === s.id || es.name.toLowerCase() === s.name.toLowerCase())) {
+        list.push({
+          ...s,
+          rating: 4.6,
+          reviewsCount: 1200,
+          timings: "09:00 AM - 05:30 PM",
+          crowdDensity: "Moderate",
+          dressCode: "Modest casual attire",
+          frequentScams: "Always verify licensed ASI guides. Refuse unauthorized street vendors.",
+          safetyTips: "Stay on designated paved paths and carry drinking water."
+        });
+      }
+    });
+    return list;
   });
+
+  useEffect(() => {
+    const loadPlaces = () => {
+      const coreList = [...enrichedHeritageSites];
+      heritageSites.forEach(s => {
+        if (!coreList.some(es => es.id === s.id || es.name.toLowerCase() === s.name.toLowerCase())) {
+          coreList.push({
+            ...s,
+            rating: 4.6,
+            reviewsCount: 1200,
+            timings: "09:00 AM - 05:30 PM",
+            crowdDensity: "Moderate",
+            dressCode: "Modest casual attire",
+            frequentScams: "Always verify licensed ASI guides. Refuse unauthorized street vendors.",
+            safetyTips: "Stay on designated paved paths and carry drinking water."
+          });
+        }
+      });
+
+      try {
+        const saved = localStorage.getItem("by-admin-entity-places");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            parsed.forEach((p) => {
+              const idx = coreList.findIndex(x => x.id === p.id || x.name.toLowerCase() === p.name.toLowerCase());
+              const formatted = {
+                id: p.id,
+                name: p.name,
+                state: p.state || "India",
+                tag: p.tag || "Cultural",
+                image: p.image || "https://images.unsplash.com/photo-1548013146-72479768bada?w=500&auto=format&fit=crop&q=80",
+                description: p.description || p.history || "",
+                rating: Number(p.rating) || 4.7,
+                reviewsCount: Number(p.reviewsCount) || 1200,
+                timings: p.timings || "09:00 AM - 05:30 PM",
+                crowdDensity: p.crowdDensity || "Moderate",
+                dressCode: p.dressCode || "Modest casual attire",
+                frequentScams: p.frequentScams || "Verify guides.",
+                safetyTips: p.safetyTips || "Keep hydrated.",
+                district: p.district || "",
+                city: p.city || "",
+                wiki: p.wiki || "",
+                youtube: p.youtube || "",
+              };
+              if (idx !== -1) {
+                coreList[idx] = { ...coreList[idx], ...formatted };
+              } else {
+                coreList.unshift(formatted);
+              }
+            });
+          }
+        }
+      } catch {}
+      setAllSites(coreList);
+    };
+
+    loadPlaces();
+    window.addEventListener("by-places-updated", loadPlaces);
+    return () => window.removeEventListener("by-places-updated", loadPlaces);
+  }, []);
 
   // Handle URL id param to open modal automatically
   useEffect(() => {
@@ -43,7 +107,7 @@ export default function Heritage() {
         setActiveModalSite(match);
       }
     }
-  }, [selectedId]);
+  }, [selectedId, allSites]);
 
   // Filtering
   const filteredSites = allSites.filter(site => {

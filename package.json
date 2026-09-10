@@ -1,5 +1,5 @@
 {
-  "name": "base44-app",
+  "name": "bharat-yatra",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -55,6 +55,7 @@
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.5.2",
     "express": "^5.2.1",
+    "firebase": "^12.19.0",
     "framer-motion": "^11.16.4",
     "html2canvas": "^1.4.1",
     "input-otp": "^1.4.2",
@@ -83,6 +84,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.19.0",
+    "@firebase/eslint-plugin-security-rules": "^0.0.2",
     "@types/express": "^5.0.6",
     "@types/node": "^22.13.5",
     "@types/react": "^18.2.66",

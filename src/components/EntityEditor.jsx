@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { Plus, Pencil, Trash2, X, Loader2, Upload, Search, RotateCcw, CheckCircle2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
-export default function EntityEditor({ entityName, fields, title, defaultData = [] }) {
+export default function EntityEditor({ entityName, fields, title, defaultData, initialData }) {
+  const actualDefaultData = defaultData || initialData || [];
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null); // record or {} for new
@@ -41,8 +42,8 @@ export default function EntityEditor({ entityName, fields, title, defaultData = 
       }
 
       // 3. If still empty, use provided default before-data!
-      if ((!list || list.length === 0) && defaultData && defaultData.length > 0) {
-        list = defaultData.map((item, idx) => ({
+      if ((!list || list.length === 0) && actualDefaultData && actualDefaultData.length > 0) {
+        list = actualDefaultData.map((item, idx) => ({
           id: item.id || `${entityName.toLowerCase()}-${idx + 1}`,
           ...item,
         }));
@@ -61,14 +62,34 @@ export default function EntityEditor({ entityName, fields, title, defaultData = 
     load();
   }, [entityName]);
 
+  const syncSecondaryKeys = (updatedList) => {
+    if (entityName === "products") {
+      localStorage.setItem("by-artisan-products", JSON.stringify(updatedList));
+      window.dispatchEvent(new CustomEvent("by-products-updated", { detail: updatedList }));
+    } else if (entityName === "hotels") {
+      localStorage.setItem("by-hotels-directory", JSON.stringify(updatedList));
+      window.dispatchEvent(new CustomEvent("by-hotels-updated", { detail: updatedList }));
+    } else if (entityName === "places") {
+      window.dispatchEvent(new CustomEvent("by-places-updated", { detail: updatedList }));
+    } else if (entityName === "foods") {
+      window.dispatchEvent(new CustomEvent("by-foods-updated", { detail: updatedList }));
+    } else if (entityName === "events") {
+      window.dispatchEvent(new CustomEvent("by-events-updated", { detail: updatedList }));
+    } else if (entityName === "states") {
+      localStorage.setItem("by-states-directory", JSON.stringify(updatedList));
+      window.dispatchEvent(new CustomEvent("by-states-updated", { detail: updatedList }));
+    }
+  };
+
   function resetToDefaultCatalog() {
-    if (defaultData && defaultData.length > 0) {
-      const formatted = defaultData.map((item, idx) => ({
+    if (actualDefaultData && actualDefaultData.length > 0) {
+      const formatted = actualDefaultData.map((item, idx) => ({
         id: item.id || `${entityName.toLowerCase()}-${idx + 1}`,
         ...item,
       }));
       setRecords(formatted);
       localStorage.setItem(storageKey, JSON.stringify(formatted));
+      syncSecondaryKeys(formatted);
       setSuccessMsg(`Restored ${formatted.length} catalog records from initial database.`);
       setTimeout(() => setSuccessMsg(""), 4000);
     }
@@ -110,6 +131,7 @@ export default function EntityEditor({ entityName, fields, title, defaultData = 
       }
       setRecords(updated);
       localStorage.setItem(storageKey, JSON.stringify(updated));
+      syncSecondaryKeys(updated);
 
       setEditing(null);
       setSuccessMsg("Record saved successfully!");
@@ -156,6 +178,7 @@ export default function EntityEditor({ entityName, fields, title, defaultData = 
       const updated = records.filter((r) => r.id !== id);
       setRecords(updated);
       localStorage.setItem(storageKey, JSON.stringify(updated));
+      syncSecondaryKeys(updated);
       setSuccessMsg("Record removed.");
       setTimeout(() => setSuccessMsg(""), 3000);
     } catch (e) {
@@ -195,7 +218,7 @@ export default function EntityEditor({ entityName, fields, title, defaultData = 
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          {defaultData && defaultData.length > 0 && (
+          {actualDefaultData && actualDefaultData.length > 0 && (
             <button
               type="button"
               onClick={resetToDefaultCatalog}
@@ -203,7 +226,7 @@ export default function EntityEditor({ entityName, fields, title, defaultData = 
               title="Reset catalog with all authentic before-data"
             >
               <RotateCcw className="w-3.5 h-3.5 text-primary" />
-              <span>Preload Full Catalog ({defaultData.length})</span>
+              <span>Preload Full Catalog ({actualDefaultData.length})</span>
             </button>
           )}
           <button
@@ -343,9 +366,9 @@ export default function EntityEditor({ entityName, fields, title, defaultData = 
             <div>
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="font-bold text-sm text-foreground truncate">{r.name}</p>
+                  <p className="font-bold text-sm text-foreground truncate">{r.name || r.state || r.title || "Unnamed"}</p>
                   <p className="text-xs text-muted-foreground truncate">
-                    {r.state || r.city || r.origin || r.month || r.location || "National"}
+                    {r.region || r.state || r.city || r.origin || r.month || r.location || "National"}
                   </p>
                 </div>
                 <div className="flex gap-1 shrink-0">
@@ -369,15 +392,15 @@ export default function EntityEditor({ entityName, fields, title, defaultData = 
               {r.image && (
                 <img
                   src={r.image}
-                  alt={r.name}
+                  alt={r.name || r.state}
                   className="mt-2.5 h-28 w-full object-cover rounded-xl border border-border"
                   referrerPolicy="no-referrer"
                 />
               )}
 
-              {r.description && (
+              {(r.description || r.caption) && (
                 <p className="mt-2 text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-                  {r.description}
+                  {r.description || r.caption}
                 </p>
               )}
             </div>

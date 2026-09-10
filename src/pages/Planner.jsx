@@ -4,7 +4,7 @@ import {
   Mic, MicOff, MapPin, Star, Bus, Car, Train, Plane, Bot, CreditCard, 
   Wallet, Download, CheckCircle, Phone, ShieldCheck, 
   Compass, Gift, CheckCircle2, Calendar, Accessibility, 
-  X, QrCode
+  X, QrCode, Award, Sparkles, Volume2
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { getHotelsForCity, governmentRecognizedHotels } from "@/lib/hotelDirectoryData";
@@ -12,6 +12,136 @@ import { getAvailableTransports } from "@/components/lib/transportDirectoryData"
 import { generateTripVoucherPDF } from "@/components/lib/pdfGenerator";
 import TripPlanDetail from "@/components/TripPlanDetail";
 import BudgetDashboard from "@/components/BudgetDashboard";
+import VoiceToTextInput from "@/components/ui/VoiceToTextInput";
+
+export const licensedHeritageGuides = [
+  {
+    id: "g-1",
+    name: "Suresh Babu",
+    badge: "ASI-AP-849",
+    city: "Visakhapatnam",
+    languages: ["Telugu", "English", "Hindi"],
+    experience: "12 yrs exp",
+    rating: 4.95,
+    toursCount: 142,
+    ratePerDay: 1400,
+    specialty: "Buddhist heritage, Araku tribal history & Coastal flora",
+    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
+  },
+  {
+    id: "g-2",
+    name: "Mirza Farooq",
+    badge: "ASI-TS-219",
+    city: "Hyderabad",
+    languages: ["Urdu", "Hindi", "Telugu", "English"],
+    experience: "16 yrs exp",
+    rating: 4.98,
+    toursCount: 320,
+    ratePerDay: 1600,
+    specialty: "Qutb Shahi architecture, Golconda acoustics & Nizami culinary lore",
+    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80",
+  },
+  {
+    id: "g-3",
+    name: "Rajendra Sharma",
+    badge: "ASI-UP-102",
+    city: "Agra",
+    languages: ["Hindi", "English", "Spanish"],
+    experience: "14 yrs exp",
+    rating: 4.92,
+    toursCount: 410,
+    ratePerDay: 1500,
+    specialty: "Mughal marble inlay craftsmanship & Taj Mahal sunset angles",
+    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80",
+  },
+  {
+    id: "g-4",
+    name: "Ananya Sen",
+    badge: "ASI-DL-388",
+    city: "Delhi",
+    languages: ["Hindi", "Bengali", "English", "French"],
+    experience: "9 yrs exp",
+    rating: 4.91,
+    toursCount: 185,
+    ratePerDay: 1350,
+    specialty: "Old Delhi Chandni Chowk walks & Mughal architectural conservation",
+    avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80",
+  },
+  {
+    id: "g-5",
+    name: "Priya Ramanathan",
+    badge: "ASI-AP-412",
+    city: "Tirupati",
+    languages: ["Tamil", "Telugu", "English", "Kannada"],
+    experience: "11 yrs exp",
+    rating: 4.96,
+    toursCount: 220,
+    ratePerDay: 1450,
+    specialty: "Dravidian temple architecture, Chola inscriptions & Tirumala traditions",
+    avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80",
+  },
+  {
+    id: "g-6",
+    name: "Vikram Rathore",
+    badge: "ASI-RJ-507",
+    city: "Jaipur",
+    languages: ["Hindi", "Rajasthani", "English", "German"],
+    experience: "13 yrs exp",
+    rating: 4.94,
+    toursCount: 290,
+    ratePerDay: 1550,
+    specialty: "Rajput fort defense mechanisms & block printing artisan tours",
+    avatar: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150&auto=format&fit=crop&q=80",
+  },
+  {
+    id: "g-7",
+    name: "Pandit Devendra Pandey",
+    badge: "ASI-UP-781",
+    city: "Varanasi",
+    languages: ["Sanskrit", "Hindi", "English"],
+    experience: "18 yrs exp",
+    rating: 4.99,
+    toursCount: 450,
+    ratePerDay: 1600,
+    specialty: "Ganga Aarti philosophy, Kashi Vishwanath corridors & Kabir mutt",
+    avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&auto=format&fit=crop&q=80",
+  },
+];
+
+export const localTransitOptions = [
+  {
+    id: "dedicated-cab",
+    name: "Dedicated AC Chauffeur Cab / SUV",
+    icon: Car,
+    desc: "Private air-conditioned car with verified tourist driver throughout the itinerary",
+    dailyRate: 1800,
+    tag: "Most Popular for Families",
+  },
+  {
+    id: "eco-rickshaw",
+    name: "Eco E-Auto & Heritage Rickshaw Passes",
+    icon: Car,
+    desc: "Clean electric auto-rickshaw rides for navigating heritage bazaars & temple lanes",
+    dailyRate: 650,
+    tag: "Eco & Agile",
+  },
+  {
+    id: "hop-on-bus",
+    name: "State Tourism (APTDC / TG) Hop-On Hop-Off AC Coach",
+    icon: Bus,
+    desc: "Curated sightseeing circuit coach connecting all monuments with audio commentary",
+    dailyRate: 450,
+    tag: "Budget Friendly",
+  },
+  {
+    id: "self-drive",
+    name: "Self-Drive EV / Sedan Rental",
+    icon: Car,
+    desc: "GPS-enabled sanitized self-drive car with unlimited km within district circuit",
+    dailyRate: 1600,
+    tag: "Total Flexibility",
+  },
+];
 
 const popularDestinations = [
   { name: "Visakhapatnam", state: "Andhra Pradesh", note: "Beaches, Buddhist Hills & Borra Caves" },
@@ -67,6 +197,14 @@ export default function Planner() {
   const [transport, setTransport] = useState("Vande Bharat / Express Train");
   const [withGuide, setWithGuide] = useState(true);
 
+  // Mode of Transport During Trip (Sightseeing transit)
+  const [selectedLocalTransit, setSelectedLocalTransit] = useState(localTransitOptions[0]);
+
+  // Selected ASI Licensed Heritage Guide
+  const [selectedGuide, setSelectedGuide] = useState(() => {
+    return licensedHeritageGuides.find(g => g.city.toLowerCase() === "visakhapatnam") || licensedHeritageGuides[0];
+  });
+
   // Transport Facilities & Selected Facility
   const [availableFacilities, setAvailableFacilities] = useState({ trains: [], flights: [], buses: [] });
   const [selectedFacility, setSelectedFacility] = useState(null);
@@ -93,6 +231,7 @@ export default function Planner() {
   // Voice Input State
   const [isListening, setIsListening] = useState(false);
   const [voiceNotice, setVoiceNotice] = useState("");
+  const [spokenTripPrompt, setSpokenTripPrompt] = useState("");
   const recognitionRef = useRef(null);
 
   // Synchronize URL destination param
@@ -103,12 +242,20 @@ export default function Planner() {
     }
   }, [params]);
 
-  // Load verified hotels strictly matching destination city
+  // Load verified hotels & match certified local guide strictly matching destination city
   useEffect(() => {
     const hotelsForDest = getHotelsForCity(to);
     setMatchingHotels(hotelsForDest);
     if (hotelsForDest.length > 0) {
       setSelectedHotel(hotelsForDest[0]);
+    }
+
+    // Auto-match guide for the destination city
+    const matchedGuide = licensedHeritageGuides.find(g => 
+      g.city.toLowerCase().includes(to.toLowerCase()) || to.toLowerCase().includes(g.city.toLowerCase())
+    );
+    if (matchedGuide) {
+      setSelectedGuide(matchedGuide);
     }
   }, [to]);
 
@@ -181,21 +328,85 @@ export default function Planner() {
   }
 
   function parseVoiceCommand(text) {
+    if (!text) return;
+    setSpokenTripPrompt(text);
     const lower = text.toLowerCase();
-    for (const d of popularDestinations) {
-      if (lower.includes(d.name.toLowerCase())) {
-        setTo(d.name);
+
+    // Check popular & additional heritage circuit destinations
+    const recognizedCities = [
+      ...popularDestinations.map(d => d.name),
+      "Varanasi", "Jaipur", "Hampi", "Konark", "Udaipur", "Amritsar", 
+      "Madurai", "Tirupati", "Warangal", "Agra", "Delhi", "Goa", "Jodhpur", "Mysore"
+    ];
+
+    let foundCity = "";
+    for (const city of recognizedCities) {
+      if (lower.includes(city.toLowerCase())) {
+        setTo(city);
+        foundCity = city;
         break;
       }
     }
+
+    // Days match
+    let foundDays = null;
     const dayMatch = lower.match(/(\d+)\s*(?:day|days)/);
     if (dayMatch && dayMatch[1]) {
-      setDays(Math.min(15, Math.max(1, parseInt(dayMatch[1]))));
+      foundDays = Math.min(15, Math.max(1, parseInt(dayMatch[1])));
+      setDays(foundDays);
+    } else if (lower.includes("weekend")) {
+      foundDays = 2;
+      setDays(2);
+    } else if (lower.includes("a week") || lower.includes("one week")) {
+      foundDays = 7;
+      setDays(7);
     }
-    if (lower.includes("solo")) setGroup("Solo");
-    else if (lower.includes("family")) setGroup("Family");
-    else if (lower.includes("couple")) setGroup("Couple");
-    else if (lower.includes("friends") || lower.includes("group")) setGroup("Group");
+
+    // Group match
+    let foundGroup = "";
+    if (lower.includes("solo")) {
+      setGroup("Solo");
+      foundGroup = "Solo";
+    } else if (lower.includes("family") || lower.includes("kids") || lower.includes("children")) {
+      setGroup("Family");
+      foundGroup = "Family";
+    } else if (lower.includes("couple") || lower.includes("honeymoon") || lower.includes("romantic")) {
+      setGroup("Couple");
+      foundGroup = "Couple";
+    } else if (lower.includes("friends") || lower.includes("group") || lower.includes("buddies")) {
+      setGroup("Group");
+      foundGroup = "Group";
+    }
+
+    // Food preference match
+    if (lower.includes("jain")) {
+      setFood("Jain (No Root Veg)");
+    } else if (lower.includes("satvik") || lower.includes("temple food")) {
+      setFood("Satvik (Pure Veg, No Onion Garlic)");
+    } else if (lower.includes("vegetarian") || lower.includes("pure veg") || lower.includes("veg")) {
+      setFood("Pure Vegetarian");
+    }
+
+    // Budget match if mentioned
+    const budgetMatch = lower.match(/(?:budget|spend|cost)\s*(?:of|is|around|about)?\s*(?:rs|inr|₹)?\s*(\d{4,6})/);
+    if (budgetMatch && budgetMatch[1]) {
+      const bVal = parseInt(budgetMatch[1]);
+      if (bVal >= 5000 && bVal <= 100000) {
+        setBudget(bVal);
+      }
+    }
+
+    const summaryParts = [];
+    if (foundCity) summaryParts.push(`Destination: ${foundCity}`);
+    if (foundDays) summaryParts.push(`${foundDays} Days`);
+    if (foundGroup) summaryParts.push(`${foundGroup} Trip`);
+    
+    setVoiceNotice(
+      summaryParts.length > 0
+        ? `Applied from voice: ${summaryParts.join(" · ")}`
+        : `Voice prompt captured: "${text.slice(0, 50)}..."`
+    );
+    setTimeout(() => setVoiceNotice(""), 4500);
   }
 
   // Calculate Transport & Breakdown
@@ -220,10 +431,11 @@ export default function Planner() {
   function calculateBreakdown(hotel, itinerary) {
     const hotelCost = (hotel?.price || 3500) * days;
     const tCost = calculatedTransportCost;
-    const guideCost = withGuide ? 1200 * days : 0;
+    const localTransitCost = (selectedLocalTransit?.dailyRate || 1800) * days;
+    const guideCost = withGuide ? (selectedGuide?.ratePerDay || 1400) * days : 0;
     const foodCost = 800 * days;
-    const total = hotelCost + tCost + guideCost + foodCost;
-    return { hotel, itinerary, breakdown: { hotelCost, tCost, guideCost, foodCost, total } };
+    const total = hotelCost + tCost + localTransitCost + guideCost + foodCost;
+    return { hotel, itinerary, breakdown: { hotelCost, tCost, localTransitCost, guideCost, foodCost, total } };
   }
 
   async function generate() {
@@ -247,8 +459,11 @@ export default function Planner() {
             budget, 
             transport, 
             tripDate,
-            conditions: userConditions,
+            conditions: spokenTripPrompt ? `${spokenTripPrompt}${userConditions ? ` · ${userConditions}` : ""}` : userConditions,
+            userPrompt: spokenTripPrompt,
             withGuide,
+            guideName: withGuide ? selectedGuide?.name : "None",
+            localTransit: selectedLocalTransit?.name,
             hotelName: hotel.name,
             hotelLocation: hotel.location
           }),
@@ -265,7 +480,9 @@ Trip Date: ${tripDate}
 Special conditions / requirements: ${userConditions}
 Staying at: ${hotel.name} (${hotel.location}, ${to})
 Food style: ${food}
-Transport: ${transport} (${selectedFacility?.name || "Express"})
+Intercity Transport: ${transport} (${selectedFacility?.name || "Express"})
+Sightseeing Transit: ${selectedLocalTransit?.name}
+Heritage Guide: ${withGuide ? `${selectedGuide?.name} (Badge: ${selectedGuide?.badge})` : "Self-guided"}
 Return ${days} days with short title and descriptive heritage sights strictly in ${to}.`,
           response_json_schema: {
             type: "object",
@@ -297,7 +514,7 @@ Return ${days} days with short title and descriptive heritage sights strictly in
 
       const finalItin = itin.length === days ? itin : ruleItinerary(hotel);
       setPlan({ ...calculateBreakdown(hotel, finalItin), summary: res?.summary || "" });
-      setAiNote(`✨ AI verified itinerary based on real hotel (${hotel.name}) in ${to}`);
+      setAiNote(`✨ AI verified itinerary with ${withGuide ? `${selectedGuide?.name} & ` : ""}${selectedLocalTransit?.name} in ${to}`);
     } catch {
       setAiNote(`Curated government heritage plan generated for ${to}.`);
       setPlan(calculateBreakdown(hotel, ruleItinerary(hotel)));
@@ -325,6 +542,9 @@ Return ${days} days with short title and descriptive heritage sights strictly in
         transport_facility: selectedFacility?.name || selectedTransportObj.label,
         transport_code: selectedFacility?.code || "Direct Route",
         transport_timing: selectedFacility?.departure ? `${selectedFacility.departure} - ${selectedFacility.arrival}` : "Flexible Timings",
+        local_transit: selectedLocalTransit,
+        with_guide: withGuide,
+        selected_guide: withGuide ? selectedGuide : null,
         hotel: hotel,
         payment_method: paymentGateway === "upi" ? `UPI (${upiApp.toUpperCase()})` : paymentGateway === "card" ? "Credit / Debit Card" : "Cash on Delivery (Pay at Hotel)",
         status: "Confirmed",
@@ -476,6 +696,30 @@ Return ${days} days with short title and descriptive heritage sights strictly in
               >
                 {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
               </button>
+            </div>
+
+            {/* Voice-to-Text Dream Trip Input */}
+            <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-semibold text-primary flex items-center gap-1.5">
+                  <Volume2 className="w-3.5 h-3.5" /> Describe Your Ideal Trip (Voice or Text)
+                </span>
+                <span className="text-[10px] text-muted-foreground">AI recognizes destination, days & style</span>
+              </div>
+              <VoiceToTextInput
+                value={spokenTripPrompt}
+                onChange={(val) => setSpokenTripPrompt(val)}
+                onTranscript={(txt) => {
+                  parseVoiceCommand(txt);
+                }}
+                placeholder="Speak or describe: 'Plan a 4-day trip to Varanasi for family'..."
+              />
+              {voiceNotice && (
+                <div className="text-[11px] text-primary font-medium flex items-center gap-1.5 animate-fadeIn">
+                  <Sparkles className="w-3 h-3 shrink-0" />
+                  <span>{voiceNotice}</span>
+                </div>
+              )}
             </div>
 
             {/* Popular Destination Quick Chips */}
@@ -838,19 +1082,174 @@ Return ${days} days with short title and descriptive heritage sights strictly in
               </div>
             </div>
 
-            {/* Licensed Guide Checkbox */}
-            <label className="flex items-center gap-3 p-3.5 rounded-2xl bg-muted/50 border border-border cursor-pointer">
-              <input
-                type="checkbox"
-                checked={withGuide}
-                onChange={(e) => setWithGuide(e.target.checked)}
-                className="w-4 h-4 accent-primary rounded"
-              />
-              <div className="text-xs">
-                <span className="font-bold text-foreground">Include Government Licensed Heritage Guide</span>
-                <p className="text-muted-foreground mt-0.5">Certified ASI badge guide with historical narratives & crowd assistance.</p>
+            {/* Mode of Transport During Trip (Sightseeing & Excursions) */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Mode of Transport During Trip (Local Sightseeing)
+                </label>
+                <span className="text-[11px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                  {selectedLocalTransit?.tag}
+                </span>
               </div>
-            </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {localTransitOptions.map((opt) => {
+                  const Icon = opt.icon;
+                  const isSel = selectedLocalTransit?.id === opt.id;
+                  return (
+                    <div
+                      key={opt.id}
+                      onClick={() => {
+                        setSelectedLocalTransit(opt);
+                        if (plan) {
+                          const hotel = selectedHotel || matchingHotels[0] || governmentRecognizedHotels[0];
+                          const hotelCost = (hotel?.price || 3500) * days;
+                          const tCost = calculatedTransportCost;
+                          const localTransitCost = opt.dailyRate * days;
+                          const guideCost = withGuide ? (selectedGuide?.ratePerDay || 1400) * days : 0;
+                          const foodCost = 800 * days;
+                          const total = hotelCost + tCost + localTransitCost + guideCost + foodCost;
+                          setPlan({ ...plan, breakdown: { hotelCost, tCost, localTransitCost, guideCost, foodCost, total } });
+                        }
+                      }}
+                      className={`p-3 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
+                        isSel
+                          ? "border-primary bg-primary/10 shadow-xs ring-1 ring-primary/40"
+                          : "border-border bg-card hover:bg-muted/40"
+                      }`}
+                    >
+                      <div className="flex items-start gap-2.5">
+                        <div className={`p-2 rounded-xl shrink-0 ${isSel ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"}`}>
+                          <Icon className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-foreground leading-tight">{opt.name}</p>
+                          <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-2">{opt.desc}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/50 text-[11px]">
+                        <span className="font-bold text-primary">₹{opt.dailyRate}/day</span>
+                        <span className={`font-semibold ${isSel ? "text-primary" : "text-muted-foreground"}`}>
+                          {isSel ? "Selected ✓" : "Choose"}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Licensed Guide Checkbox & Guide Selection Card */}
+            <div className="space-y-3">
+              <label className="flex items-center gap-3 p-3.5 rounded-2xl bg-muted/50 border border-border cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={withGuide}
+                  onChange={(e) => {
+                    setWithGuide(e.target.checked);
+                    if (plan) {
+                      const hotel = selectedHotel || matchingHotels[0] || governmentRecognizedHotels[0];
+                      const hotelCost = (hotel?.price || 3500) * days;
+                      const tCost = calculatedTransportCost;
+                      const localTransitCost = (selectedLocalTransit?.dailyRate || 1800) * days;
+                      const guideCost = e.target.checked ? (selectedGuide?.ratePerDay || 1400) * days : 0;
+                      const foodCost = 800 * days;
+                      const total = hotelCost + tCost + localTransitCost + guideCost + foodCost;
+                      setPlan({ ...plan, breakdown: { hotelCost, tCost, localTransitCost, guideCost, foodCost, total } });
+                    }
+                  }}
+                  className="w-4 h-4 accent-primary rounded"
+                />
+                <div className="text-xs flex-1">
+                  <span className="font-bold text-foreground flex items-center gap-1.5">
+                    <Award className="w-3.5 h-3.5 text-primary" /> Include Government Licensed Heritage Guide
+                  </span>
+                  <p className="text-muted-foreground mt-0.5">Certified ASI badge guide with historical narratives, temple access & crowd assistance.</p>
+                </div>
+              </label>
+
+              {/* Guide Selection Picker */}
+              {withGuide && (
+                <div className="p-4 rounded-2xl bg-card border border-primary/30 shadow-xs space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-primary" /> Choose Your ASI Certified Guide
+                    </span>
+                    <span className="text-[10px] font-bold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                      Verified Identity
+                    </span>
+                  </div>
+
+                  {/* Guides Carousel/List */}
+                  <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                    {licensedHeritageGuides.map((guide) => {
+                      const isSel = selectedGuide?.id === guide.id;
+                      const isCityMatch = guide.city.toLowerCase().includes(to.toLowerCase()) || to.toLowerCase().includes(guide.city.toLowerCase());
+                      return (
+                        <div
+                          key={guide.id}
+                          onClick={() => {
+                            setSelectedGuide(guide);
+                            if (plan) {
+                              const hotel = selectedHotel || matchingHotels[0] || governmentRecognizedHotels[0];
+                              const hotelCost = (hotel?.price || 3500) * days;
+                              const tCost = calculatedTransportCost;
+                              const localTransitCost = (selectedLocalTransit?.dailyRate || 1800) * days;
+                              const guideCost = guide.ratePerDay * days;
+                              const foodCost = 800 * days;
+                              const total = hotelCost + tCost + localTransitCost + guideCost + foodCost;
+                              setPlan({ ...plan, breakdown: { hotelCost, tCost, localTransitCost, guideCost, foodCost, total } });
+                            }
+                          }}
+                          className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center gap-3 ${
+                            isSel
+                              ? "border-primary bg-primary/10 shadow-xs ring-1 ring-primary/40"
+                              : "border-border bg-background hover:bg-muted/40"
+                          }`}
+                        >
+                          <img
+                            src={guide.avatar}
+                            alt={guide.name}
+                            className="w-11 h-11 rounded-full object-cover shrink-0 border-2 border-primary/40"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-bold text-foreground truncate">{guide.name}</span>
+                              <span className="text-[9px] font-mono font-bold bg-muted px-1.5 py-0.5 rounded text-muted-foreground shrink-0">
+                                {guide.badge}
+                              </span>
+                              {isCityMatch && (
+                                <span className="text-[9px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded shrink-0">
+                                  {guide.city}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-muted-foreground truncate mt-0.5">
+                              {guide.specialty}
+                            </p>
+                            <div className="flex items-center gap-2 mt-1 text-[10px] text-muted-foreground">
+                              <span className="text-amber-500 font-bold flex items-center gap-0.5">
+                                <Star className="w-3 h-3 fill-current" /> {guide.rating}
+                              </span>
+                              <span>·</span>
+                              <span>{guide.experience}</span>
+                              <span>·</span>
+                              <span className="truncate">{guide.languages.join(", ")}</span>
+                            </div>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <span className="text-xs font-bold text-primary block">₹{guide.ratePerDay}/d</span>
+                            <span className={`text-[10px] font-semibold ${isSel ? "text-primary" : "text-muted-foreground"}`}>
+                              {isSel ? "Selected ✓" : "Select"}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Action Buttons */}
             <div className="pt-2">
@@ -1013,8 +1412,12 @@ Return ${days} days with short title and descriptive heritage sights strictly in
                   <span>₹{plan.breakdown.hotelCost.toLocaleString("en-IN")}</span>
                 </div>
                 <div className="flex justify-between text-muted-foreground">
-                  <span>Transport ({selectedFacility?.name ? `${selectedFacility.name} (#${selectedFacility.code})` : transport})</span>
+                  <span>Intercity Travel ({selectedFacility?.name ? `${selectedFacility.name} (#${selectedFacility.code})` : transport})</span>
                   <span>₹{plan.breakdown.tCost.toLocaleString("en-IN")}</span>
+                </div>
+                <div className="flex justify-between text-muted-foreground">
+                  <span>Local Sightseeing ({selectedLocalTransit?.name || "Transit Pass"} · {days} days)</span>
+                  <span>₹{plan.breakdown.localTransitCost.toLocaleString("en-IN")}</span>
                 </div>
                 <div className="flex justify-between text-muted-foreground">
                   <span>Food & Dining ({food} · {days} days)</span>
@@ -1022,7 +1425,7 @@ Return ${days} days with short title and descriptive heritage sights strictly in
                 </div>
                 {plan.breakdown.guideCost > 0 && (
                   <div className="flex justify-between text-muted-foreground">
-                    <span>Licensed Heritage Guide ({days} days)</span>
+                    <span>Licensed Heritage Guide ({selectedGuide?.name} · {days} days)</span>
                     <span>₹{plan.breakdown.guideCost.toLocaleString("en-IN")}</span>
                   </div>
                 )}
@@ -1081,6 +1484,8 @@ Return ${days} days with short title and descriptive heritage sights strictly in
               food={food}
               group={group}
               transport={selectedFacility?.name ? `${selectedFacility.name} (${selectedFacility.code})` : transport}
+              localTransit={selectedLocalTransit?.name}
+              guide={withGuide ? selectedGuide : null}
               withGuide={withGuide}
               payment={confirmedBooking?.payment_method || "Verified Booking"}
               conditions={userConditions}

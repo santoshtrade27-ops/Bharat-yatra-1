@@ -1,14 +1,16 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { 
   User, Lock, Package, Map, Phone, Award, Shield, CheckCircle2, 
   Download, Calendar, MapPin, Trash2, Edit3, Save, AlertTriangle, 
-  Compass, Sun, Moon, Globe 
+  Compass, Sun, Moon, Globe, Camera
 } from "lucide-react";
 import { useTheme } from "@/lib/theme";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/AuthContext";
 import { getOrders } from "@/lib/cart";
 import { generateTripVoucherPDF, generateShopInvoicePDF } from "@/components/lib/pdfGenerator";
+import TravelJournal from "@/components/TravelJournal";
 
 const offlineMapsData = [
   {
@@ -49,8 +51,20 @@ export default function Profile() {
   const { theme, toggle } = useTheme();
   const { lang, setLang } = useI18n();
   const { user: authUser, isAuthenticated, logout } = useAuth();
+  const [params] = useSearchParams();
 
-  const [activeTab, setActiveTab] = useState("personal");
+  const [activeTab, setActiveTab] = useState(() => {
+    const t = params.get("tab");
+    if (t === "bookings") return "trips";
+    return t || "personal";
+  });
+
+  useEffect(() => {
+    const tabParam = params.get("tab");
+    if (tabParam) {
+      setActiveTab(tabParam === "bookings" ? "trips" : tabParam);
+    }
+  }, [params]);
 
   // Personal Profile State
   const [profile, setProfile] = useState({
@@ -58,6 +72,7 @@ export default function Profile() {
     email: "aditya.travels@bharatyatra.gov.in",
     phone: "+91 98490 12345",
     homeCity: "Visakhapatnam",
+    deviceName: "Pixel 8 Pro (Google Find My Device Linked)",
     bloodGroup: "O+ Positive",
     emergencyContactName: "Ramesh Sharma (Father)",
     emergencyContactPhone: "+91 98490 54321",
@@ -74,6 +89,9 @@ export default function Profile() {
 
   // Booked Trips State
   const [bookedTrips, setBookedTrips] = useState([]);
+  
+  // Event Requests State
+  const [eventRequests, setEventRequests] = useState([]);
   
   // Orders State
   const [orders, setOrders] = useState([]);
@@ -131,6 +149,16 @@ export default function Profile() {
             trip_summary: "3-Day Coastal & Buddhist Heritage Tour of Visakhapatnam",
           }
         ]);
+      }
+    } catch {}
+
+    // Load Event Requests
+    try {
+      const evts = localStorage.getItem("by-event-requests");
+      if (evts) {
+        setEventRequests(JSON.parse(evts));
+      } else {
+        setEventRequests([]);
       }
     } catch {}
 
@@ -260,6 +288,7 @@ export default function Profile() {
           <div className="flex items-center gap-2 mt-8 overflow-x-auto pb-2 scrollbar-none text-xs sm:text-sm font-semibold">
             {[
               { id: "personal", label: "Profile & Password", icon: User },
+              { id: "journal", label: "Visual Travel Journal", icon: Camera },
               { id: "trips", label: `My Trips (${bookedTrips.length})`, icon: Compass },
               { id: "orders", label: `Shop Orders (${orders.length})`, icon: Package },
               { id: "maps", label: "Downloaded Maps", icon: Map },
@@ -293,6 +322,11 @@ export default function Profile() {
             <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
             <span>{savedNotice}</span>
           </div>
+        )}
+
+        {/* TAB: VISUAL TRAVEL JOURNAL */}
+        {activeTab === "journal" && (
+          <TravelJournal />
         )}
 
         {/* TAB 1: PERSONAL PROFILE & PASSWORD */}
@@ -389,16 +423,34 @@ export default function Profile() {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
-                    Emergency WhatsApp Number
-                  </label>
-                  <input
-                    type="text"
-                    value={profile.emergencyContactPhone}
-                    onChange={(e) => setProfile({ ...profile, emergencyContactPhone: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border text-sm font-medium outline-none focus:ring-2 focus:ring-primary text-foreground"
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
+                      Emergency WhatsApp Number
+                    </label>
+                    <input
+                      type="text"
+                      value={profile.emergencyContactPhone}
+                      onChange={(e) => setProfile({ ...profile, emergencyContactPhone: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border text-sm font-medium outline-none focus:ring-2 focus:ring-primary text-foreground"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
+                      Google Find My Device Name
+                    </label>
+                    <input
+                      type="text"
+                      value={profile.deviceName || ""}
+                      onChange={(e) => setProfile({ ...profile, deviceName: e.target.value })}
+                      placeholder="e.g. Pixel 8 Pro, Galaxy S24 Ultra..."
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border text-sm font-medium outline-none focus:ring-2 focus:ring-primary text-foreground"
+                    />
+                    <span className="text-[10px] text-muted-foreground block mt-1">
+                      Matches device name visible in Google Find My Device app for emergency locator
+                    </span>
+                  </div>
                 </div>
 
                 <div className="pt-3">
@@ -534,6 +586,9 @@ export default function Profile() {
                         <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 text-xs font-bold uppercase tracking-wider">
                           {b.status || "Confirmed"}
                         </span>
+                        <span className="px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[11px] font-semibold flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3" /> Cached for Offline
+                        </span>
                         <span className="text-xs text-muted-foreground">Booking ID: {b.id}</span>
                         <span className="text-xs text-muted-foreground">·</span>
                         <span className="text-xs text-muted-foreground">{new Date(b.booked_at || Date.now()).toLocaleDateString()}</span>
@@ -585,6 +640,79 @@ export default function Profile() {
                 ))}
               </div>
             )}
+
+            {/* TAB 2 SUBSECTION: CUSTOM EVENT REGISTRATIONS */}
+            <div className="pt-8 mt-8 border-t border-border/60 space-y-4">
+              <div>
+                <h4 className="text-lg font-bold text-foreground">My Registered Cultural Events</h4>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Specialized spiritual milestones, family heritage reunions, and beach celebrations managed by regional offices
+                </p>
+              </div>
+
+              {eventRequests.length === 0 ? (
+                <div className="text-center py-10 bg-card rounded-2xl border border-dashed border-border p-6">
+                  <p className="text-xs text-muted-foreground">You have no registered event planners under this profile.</p>
+                  <Link
+                    to="/event-planner"
+                    className="inline-flex mt-3 px-4 py-2 rounded-full border border-primary text-primary font-bold text-xs hover:bg-primary hover:text-primary-foreground transition-all"
+                  >
+                    Go to Event Planner
+                  </Link>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {eventRequests.map((evt) => (
+                    <div
+                      key={evt.id}
+                      className="p-5 rounded-2xl bg-card border border-border shadow-sm hover:border-primary/40 transition-all flex flex-col justify-between gap-4"
+                    >
+                      <div className="space-y-2.5">
+                        <div className="flex items-center justify-between">
+                          <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider">
+                            {evt.category}
+                          </span>
+                          <span className="text-[11px] font-mono text-muted-foreground">{evt.id}</span>
+                        </div>
+                        
+                        <div>
+                          <h5 className="font-bold text-foreground text-sm">{evt.name}</h5>
+                          <p className="text-xs text-muted-foreground mt-0.5">Destination: <strong>{evt.destination}</strong></p>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 text-[11px] bg-muted/40 p-2.5 rounded-xl">
+                          <div>
+                            <span className="text-muted-foreground">Date:</span> <strong className="text-foreground">{evt.date}</strong>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Guests:</span> <strong className="text-foreground">{evt.people}</strong>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Budget:</span> <strong className="text-foreground">₹{(evt.budget || 0).toLocaleString("en-IN")}</strong>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Status:</span> <strong className="text-emerald-600 dark:text-emerald-400 font-bold">{evt.status || "Planned"}</strong>
+                          </div>
+                        </div>
+
+                        {evt.notes && (
+                          <div className="text-xs text-muted-foreground bg-muted/20 p-2 rounded-lg italic">
+                            "{evt.notes}"
+                          </div>
+                        )}
+                      </div>
+
+                      {evt.coordinator && (
+                        <div className="pt-2 border-t border-border/40 flex items-center justify-between text-[11px]">
+                          <span className="text-muted-foreground">Assigned Coordinator:</span>
+                          <span className="font-bold text-primary">{evt.coordinator}</span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
 

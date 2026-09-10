@@ -12,6 +12,9 @@ import HeritageCard from "@/components/HeritageCard";
 import FoodCard from "@/components/FoodCard";
 import ProductCard from "@/components/ProductCard";
 import HeroVideo from "@/components/HeroVideo";
+import StateGallery from "@/components/StateGallery";
+
+
 
 const groupCards = [
   { label: "Solo", tagline: "Explore at your own pace", icon: User },
@@ -65,6 +68,7 @@ export default function Home() {
   const [heroVideoUrl, setHeroVideoUrl] = useState(
     "https://media.base44.com/videos/public/6a9bae9fd15b41c75cea5237/4135fd9b0_vidssavecomIncredibleIndia4K-BeyondtheStereotypes_TheRealIndiaRevealed720P.mp4"
   );
+  const [currentHeroImage, setCurrentHeroImage] = useState(heroImage);
   const [activeGroup, setActiveGroup] = useState(null);
   const [foods, setFoods] = useState(staticFoods);
   const [products, setProducts] = useState(staticProducts);
@@ -77,55 +81,118 @@ export default function Home() {
         const cfg = JSON.parse(c);
         if (cfg.heroVideo) setHeroVideo(cfg.heroVideo);
         if (cfg.heroVideoUrl) setHeroVideoUrl(cfg.heroVideoUrl);
+        if (cfg.heroImage) setCurrentHeroImage(cfg.heroImage);
       }
     } catch {}
-    try {
-      const savedProds = localStorage.getItem("by-artisan-products");
-      if (savedProds) {
-        const parsed = JSON.parse(savedProds);
-        if (Array.isArray(parsed) && parsed.length > 0) setProducts(parsed);
-      }
-    } catch {}
-  }, []);
-  useEffect(() => {
+
+    const loadPlaces = () => {
+      try {
+        const saved = localStorage.getItem("by-admin-entity-places");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setSites(parsed);
+            return;
+          }
+        }
+      } catch {}
+      setSites(heritageSites);
+    };
+
+    const loadFoods = () => {
+      try {
+        const saved = localStorage.getItem("by-admin-entity-foods");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setFoods(parsed);
+            return;
+          }
+        }
+      } catch {}
+      setFoods(staticFoods);
+    };
+
+    const loadProducts = () => {
+      try {
+        const saved = localStorage.getItem("by-admin-entity-products") || localStorage.getItem("by-artisan-products");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setProducts(parsed);
+            return;
+          }
+        }
+      } catch {}
+      setProducts(staticProducts);
+    };
+
+    loadPlaces();
+    loadFoods();
+    loadProducts();
+
+    // Fetch from base44 backend if available and has items
     base44.entities.Place.list("-created_date", 20).then((list) => {
-      if (list && list.length) setSites(list.map((p) => ({
-        id: p.id, name: p.name, state: p.state, tag: p.tag,
-        image: p.image, description: p.description, wiki: p.wiki, youtube: p.youtube,
-      })));
+      if (list && list.length) {
+        const formatted = list.map((p) => ({
+          id: p.id, name: p.name, state: p.state, tag: p.tag,
+          image: p.image, description: p.description, wiki: p.wiki, youtube: p.youtube,
+        }));
+        setSites(formatted);
+        localStorage.setItem("by-admin-entity-places", JSON.stringify(formatted));
+      }
     }).catch(() => {});
+
     base44.entities.Food.list("-created_date", 20).then((list) => {
-      if (list && list.length) setFoods(list);
+      if (list && list.length) {
+        setFoods(list);
+        localStorage.setItem("by-admin-entity-foods", JSON.stringify(list));
+      }
     }).catch(() => {});
+
     base44.entities.Product.list("-created_date", 20).then((list) => {
-      if (list && list.length) setProducts(list);
+      if (list && list.length) {
+        setProducts(list);
+        localStorage.setItem("by-admin-entity-products", JSON.stringify(list));
+        localStorage.setItem("by-artisan-products", JSON.stringify(list));
+      }
     }).catch(() => {});
+
+    window.addEventListener("by-places-updated", loadPlaces);
+    window.addEventListener("by-foods-updated", loadFoods);
+    window.addEventListener("by-products-updated", loadProducts);
+
+    return () => {
+      window.removeEventListener("by-places-updated", loadPlaces);
+      window.removeEventListener("by-foods-updated", loadFoods);
+      window.removeEventListener("by-products-updated", loadProducts);
+    };
   }, []);
   return (
     <div>
       {/* Hero */}
       <section className="relative h-[88vh] min-h-[560px] flex items-center justify-center text-center overflow-hidden">
         <Image
-          src={heroImage}
+          src={currentHeroImage}
           alt="Red Fort, Delhi"
           className="absolute inset-0 w-full h-full"
           fittingType="fill"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-stone-900/70 via-stone-900/55 to-stone-900/80" />
 
-        <div className="absolute top-5 right-4 z-20 flex items-center gap-1 p-1 rounded-full bg-stone-900/70 text-stone-200 text-xs font-medium">
+        <div className="absolute top-5 right-4 z-20 flex items-center gap-1 p-1 rounded-full bg-stone-900/80 backdrop-blur-md border border-stone-800 text-stone-200 text-xs font-medium shadow-lg">
           <button
             onClick={() => setMedia("photo")}
-            className={`flex items-center gap-1 px-2.5 py-1 rounded-full transition-colors ${
-              media === "photo" ? "bg-amber-500 text-stone-900" : ""
+            className={`flex items-center gap-1 px-3 py-1.5 rounded-full transition-all ${
+              media === "photo" ? "bg-amber-500 text-stone-900 font-bold shadow-md" : "hover:text-amber-400"
             }`}
           >
             <Camera className="w-3.5 h-3.5" /> Photo
           </button>
           <button
             onClick={() => setMedia("video")}
-            className={`flex items-center gap-1 px-2.5 py-1 rounded-full transition-colors ${
-              media === "video" ? "bg-amber-500 text-stone-900" : ""
+            className={`flex items-center gap-1 px-3 py-1.5 rounded-full transition-all ${
+              media === "video" ? "bg-amber-500 text-stone-900 font-bold shadow-md" : "hover:text-amber-400"
             }`}
           >
             <Video className="w-3.5 h-3.5" /> Video
@@ -202,54 +269,10 @@ export default function Home() {
         </div>
       </Section>
 
-      {/* Planner preview */}
-      <section className="bg-card border-y border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-16 grid lg:grid-cols-2 gap-8 sm:gap-10 items-center">
-          <div>
-            <p className="text-primary text-sm font-semibold uppercase tracking-wide">
-              {t("section_plan_trip")}
-            </p>
-            <h2 className="text-2xl sm:text-3xl font-bold mt-2 text-foreground">
-              {t("section_plan_sub")}
-            </h2>
-            <p className="text-muted-foreground mt-3 leading-relaxed text-sm sm:text-base">
-              Generates route + itinerary with hotels, guides & buses — tailored
-              to your group and budget.
-            </p>
-            <Link
-              to="/planner"
-              className="inline-flex items-center gap-2 mt-6 px-6 py-3 rounded-full bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity"
-            >
-              {t("cta_plan")} <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-          <div>
-            <div className="flex gap-3 overflow-x-auto pb-3 scrollbar-none -mx-1 px-1">
-              {groupCards.map((g) => (
-                <button
-                  key={g.label}
-                  onClick={() => setActiveGroup(g.label)}
-                  className="min-w-[150px] sm:min-w-[170px] shrink-0 text-left rounded-2xl bg-muted hover:bg-primary hover:text-primary-foreground transition-colors p-4 ring-1 ring-border group"
-                >
-                  <g.icon className="w-6 h-6 text-primary group-hover:text-primary-foreground mb-2" />
-                  <p className="font-semibold text-foreground group-hover:text-primary-foreground text-sm">{g.label}</p>
-                  <p className="text-xs text-muted-foreground group-hover:text-primary-foreground/80 mt-0.5">{g.tagline}</p>
-                </button>
-              ))}
-            </div>
-            <div className="grid grid-cols-4 gap-2 sm:gap-3 mt-3">
-              {["₹10k", "₹20k", "₹50k", "₹1L"].map((b, i) => (
-                <div
-                  key={i}
-                  className={`rounded-xl p-2.5 sm:p-3 text-center text-xs font-semibold ${
-                    i === 1 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                  }`}
-                >
-                  {b} Budget
-                </div>
-              ))}
-            </div>
-          </div>
+      {/* State Gallery Highlights */}
+      <section className="bg-muted/40 border-y border-border py-12 sm:py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <StateGallery />
         </div>
       </section>
 

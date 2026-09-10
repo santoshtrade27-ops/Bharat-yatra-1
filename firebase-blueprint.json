@@ -1,0 +1,93 @@
+{
+  "entities": {
+    "users": {
+      "title": "User Profile",
+      "description": "User account and profile information",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 100 },
+        "role": { "type": "string", "enum": ["admin", "guide", "hotel_partner", "safety_officer", "artisan", "tourist"] },
+        "phone": { "type": "string", "maxLength": 30 },
+        "homeCity": { "type": "string", "maxLength": 100 },
+        "bloodGroup": { "type": "string", "maxLength": 20 },
+        "emergencyContactName": { "type": "string", "maxLength": 100 },
+        "emergencyContactPhone": { "type": "string", "maxLength": 30 },
+        "sosRegistered": { "type": "boolean" },
+        "liveLocationSharing": { "type": "boolean" },
+        "lastCoordinates": { "type": "string", "maxLength": 100 },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "email", "name", "role"]
+    },
+    "bookings": {
+      "title": "Trip Booking",
+      "description": "User trip and itinerary reservations",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "destination": { "type": "string", "maxLength": 100 },
+        "days": { "type": "number" },
+        "budget": { "type": "number" },
+        "status": { "type": "string", "enum": ["confirmed", "pending", "cancelled", "completed"] },
+        "total_cost": { "type": "number" },
+        "transport": { "type": "string", "maxLength": 100 },
+        "payment_method": { "type": "string", "maxLength": 50 },
+        "booked_at": { "type": "string" }
+      },
+      "required": ["id", "userId", "destination", "status"]
+    },
+    "safetyIncidents": {
+      "title": "Safety SOS Incident",
+      "description": "Emergency SOS reports and live field status",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "traveler": { "type": "string", "maxLength": 100 },
+        "phone": { "type": "string", "maxLength": 30 },
+        "location": { "type": "string", "maxLength": 200 },
+        "coords": { "type": "string", "maxLength": 100 },
+        "time": { "type": "string", "maxLength": 50 },
+        "status": { "type": "string", "enum": ["Active Distress", "Officer Dispatched", "Resolved", "Investigating"] },
+        "severity": { "type": "string", "enum": ["High", "Medium", "Critical"] },
+        "notes": { "type": "string", "maxLength": 500 }
+      },
+      "required": ["id", "traveler", "phone", "status", "severity"]
+    },
+    "shopOrders": {
+      "title": "Artisan Shop Order",
+      "description": "Craft orders placed by tourists",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "total": { "type": "number" },
+        "address": { "type": "string", "maxLength": 300 },
+        "status": { "type": "string", "enum": ["pending", "dispatched", "delivered"] },
+        "date": { "type": "string" }
+      },
+      "required": ["id", "userId", "total", "status"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "users",
+      "description": "User profiles and assigned role"
+    },
+    "/bookings/{bookingId}": {
+      "schema": "bookings",
+      "description": "Cultural tour and hotel reservations"
+    },
+    "/safetyIncidents/{incidentId}": {
+      "schema": "safetyIncidents",
+      "description": "SOS emergency alerts and dispatch status"
+    },
+    "/shopOrders/{orderId}": {
+      "schema": "shopOrders",
+      "description": "GI-tagged artisan orders and shipment details"
+    }
+  }
+}

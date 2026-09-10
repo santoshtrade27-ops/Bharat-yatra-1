@@ -1,9 +1,8 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { 
-  Menu, X, Mic, Sun, Moon, Globe, Phone, User, Shield, 
-  Compass, LogIn, LogOut, MapPin, Mail, PhoneCall, Building2, CheckCircle2, 
-  Award, Send
+  Menu, X, Mic, Sun, Moon, Phone, User, Shield, 
+  Compass, LogIn, LogOut, Send
 } from "lucide-react";
 import { useTheme } from "@/lib/theme";
 import { useI18n } from "@/lib/i18n";
@@ -12,6 +11,7 @@ import OfflineBanner from "@/components/OfflineBanner";
 import BottomNav from "@/components/BottomNav";
 import AIAssistant from "@/components/AIAssistant";
 import CartDrawer from "@/components/CartDrawer";
+import LanguageToggle from "@/components/LanguageToggle";
 
 const navKeys = [
   { to: "/heritage", key: "nav_heritage" },
@@ -94,12 +94,12 @@ export default function Layout() {
             </span>
           </Link>
 
-          <nav className="hidden lg:flex items-center gap-5">
+          <nav className="hidden lg:flex items-center gap-6 xl:gap-8">
             {navKeys.map((l) => (
               <Link
                 key={l.to}
                 to={l.to}
-                className={`text-xs font-medium transition-colors ${
+                className={`text-xs font-semibold tracking-wide transition-colors ${
                   pathname.startsWith(l.to)
                     ? "text-primary"
                     : "text-muted-foreground hover:text-foreground"
@@ -111,18 +111,11 @@ export default function Layout() {
           </nav>
 
           <div className="flex items-center gap-1.5">
-            <div className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-full bg-muted">
-              <Globe className="w-3.5 h-3.5 text-muted-foreground" />
-              <select
-                value={lang}
-                onChange={(e) => setLang(e.target.value)}
-                className="bg-muted text-xs font-medium outline-none cursor-pointer text-foreground"
-                style={{ colorScheme: theme }}
-              >
-                <option value="en" className="bg-card text-foreground">EN</option>
-                <option value="hi" className="bg-card text-foreground">हिं</option>
-                <option value="te" className="bg-card text-foreground">తె</option>
-              </select>
+            <div className="hidden sm:block">
+              <LanguageToggle
+                selectedLang={lang}
+                onSelectLang={setLang}
+              />
             </div>
             <button
               onClick={toggle}
@@ -187,7 +180,7 @@ export default function Layout() {
 
         {open && (
           <div className="lg:hidden border-t border-border bg-card px-4 py-3">
-            <div className="grid grid-cols-2 gap-1.5">
+            <div className="grid grid-cols-2 gap-3.5">
               {navKeys.map((l) => (
                 <Link
                   key={l.to}
@@ -199,19 +192,12 @@ export default function Layout() {
                 </Link>
               ))}
             </div>
-            <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border">
-              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-muted">
-                <Globe className="w-3.5 h-3.5 text-muted-foreground" />
-                <select
-                  value={lang}
-                  onChange={(e) => setLang(e.target.value)}
-                  className="bg-muted text-xs font-medium outline-none cursor-pointer text-foreground"
-                  style={{ colorScheme: theme }}
-                >
-                  <option value="en" className="bg-card text-foreground">English</option>
-                  <option value="hi" className="bg-card text-foreground">हिंदी</option>
-                  <option value="te" className="bg-card text-foreground">తెలుగు</option>
-                </select>
+            <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-border">
+              <div className="w-full sm:w-auto">
+                <LanguageToggle
+                  selectedLang={lang}
+                  onSelectLang={setLang}
+                />
               </div>
               <Link
                 to="/admin"
@@ -250,124 +236,81 @@ export default function Layout() {
         )}
       </header>
 
-      {pathname !== "/" && <OfflineBanner />}
+      <OfflineBanner />
 
       <main>
         <Outlet />
       </main>
 
-      <footer className="bg-card border-t border-border mt-12 sm:mt-20">
+      <footer className="bg-slate-950 text-slate-300 mt-12 sm:mt-20">
         {/* Main Footer Body */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 lg:py-16">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-10">
-            {/* Column 1: Brand & Office Directorate */}
-            <div className="lg:col-span-2 space-y-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16 lg:py-20">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-16">
+            
+            {/* Brand & Office Directorate */}
+            <div className="space-y-6">
               <div className="flex items-center gap-2.5">
-                <span className="w-9 h-9 rounded-full bg-primary text-primary-foreground grid place-items-center font-bold text-lg shadow-sm">
+                <span className="w-10 h-10 rounded-full bg-primary text-primary-foreground grid place-items-center font-bold text-lg shadow-sm">
                   ब
                 </span>
-                <span className="font-heading font-bold tracking-wide text-lg text-foreground">
+                <span className="font-heading font-bold tracking-wide text-lg text-white">
                   BHARAT <span className="text-primary">YATRA</span>
                 </span>
               </div>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                National Cultural Tourism Directorate & Digital Heritage Information System. 
-                Connecting travellers with authenticated ASI heritage, rural GI artisans, certified regional guides, and 24/7 verified emergency tourist infrastructure.
+              <p className="text-sm text-slate-400 leading-relaxed">
+                National Cultural Tourism Directorate & Digital Heritage Information System. Connecting travellers with authenticated heritage, artisans, guides, and emergency infrastructure.
               </p>
-
-              {/* Office Contact Cards */}
-              <div className="space-y-2.5 pt-2 text-xs">
-                <div className="flex items-start gap-2.5 text-muted-foreground">
-                  <Building2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                  <div>
-                    <strong className="text-foreground block">Directorate Headquarters:</strong>
-                    <span>Paryatan Bhavan, 1 Parliament Street, Janpath, New Delhi - 110001</span>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-2.5 text-muted-foreground">
-                  <MapPin className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                  <div>
-                    <strong className="text-foreground block">Regional Coastal Center:</strong>
-                    <span>AP Tourism Complex, RK Beach Road, Visakhapatnam, Andhra Pradesh - 530002</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2.5 text-muted-foreground">
-                  <PhoneCall className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                  <div>
-                    <span className="text-foreground font-semibold">24/7 Toll-Free Tourist Helpline: </span>
-                    <a href="tel:1800111363" className="hover:text-primary font-bold">1800-11-1363</a>
-                    <span className="text-muted-foreground"> / +91 (891) 2564891</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2.5 text-muted-foreground">
-                  <Mail className="w-4 h-4 text-primary shrink-0" />
-                  <div>
-                    <span className="text-foreground font-semibold">Inquiries & Support: </span>
-                    <a href="mailto:contact@bharatyatra.gov.in" className="hover:text-primary underline">contact@bharatyatra.gov.in</a>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Column 2: Explore & Planner Links */}
-            <div className="space-y-3">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">Explore & Plan</h3>
-              <ul className="space-y-2 text-xs text-muted-foreground">
-                <li><Link to="/" className="hover:text-primary transition-colors">Home Portal</Link></li>
-                <li><Link to="/heritage" className="hover:text-primary transition-colors">Heritage Sites & Monuments</Link></li>
-                <li><Link to="/planner" className="hover:text-primary transition-colors">Smart Cultural Trip Planner</Link></li>
-                <li><Link to="/surprise-planner" className="hover:text-primary transition-colors">Event & Surprise Planner</Link></li>
-                <li><Link to="/map" className="hover:text-primary transition-colors">Interactive Heritage Map</Link></li>
-                <li><Link to="/events" className="hover:text-primary transition-colors">Festivals & Cultural Events</Link></li>
-              </ul>
-            </div>
-
-            {/* Column 3: Services, Safety & Local Commerce */}
-            <div className="space-y-3">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">Services & Safety</h3>
-              <ul className="space-y-2 text-xs text-muted-foreground">
-                <li><Link to="/guides" className="hover:text-primary transition-colors">Certified Heritage Guides</Link></li>
-                <li><Link to="/shop" className="hover:text-primary transition-colors">Artisan Handloom & GI Bazaar</Link></li>
-                <li><Link to="/safety" className="hover:text-primary transition-colors text-destructive font-semibold">Tourist Safety & Emergency SOS</Link></li>
-                <li><Link to="/translate" className="hover:text-primary transition-colors">Voice & Dialect Translator</Link></li>
-                <li><Link to="/profile" className="hover:text-primary transition-colors">My Profile & Saved Trips</Link></li>
-                <li><Link to="/admin" className="hover:text-primary transition-colors">Multi-Role Admin Cockpit</Link></li>
-              </ul>
-            </div>
-
-            {/* Column 4: Join As Guide / Community */}
-            <div className="space-y-4">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">Community & Guides</h3>
-              <p className="text-xs text-muted-foreground">
-                Are you a local storyteller, historian, or registered heritage guide? Join the official Bharat Yatra network.
-              </p>
-              <button
-                type="button"
-                onClick={() => setGuideModalOpen(true)}
-                className="w-full py-2.5 px-4 rounded-xl bg-primary text-primary-foreground font-semibold text-xs flex items-center justify-center gap-2 hover:opacity-95 shadow-sm transition-all"
+              
+              {/* WhatsApp Business CTA */}
+              <a 
+                href="https://wa.me/918019402710" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-emerald-600 text-white font-semibold text-sm hover:bg-emerald-700 transition-all shadow-lg hover:shadow-emerald-900/20"
               >
-                <Award className="w-4 h-4" /> Register to Become a Guide
-              </button>
+                <span className="text-lg">💬</span> Chat with Business Bot
+              </a>
+            </div>
 
-              <div className="p-3 rounded-xl bg-muted/60 border border-border text-[11px] text-muted-foreground space-y-1">
-                <p className="font-semibold text-foreground flex items-center gap-1">
-                  <Shield className="w-3.5 h-3.5 text-primary" /> Verified Accreditation
-                </p>
-                <p>Applications are reviewed directly by the Regional Guide Coordinator within 48 hours.</p>
+            {/* Column 2: Quick Links */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-white">Explore</h3>
+              <ul className="space-y-3 text-sm text-slate-400">
+                <li><Link to="/heritage" className="hover:text-primary transition-colors">Heritage Sites</Link></li>
+                <li><Link to="/planner" className="hover:text-primary transition-colors">Cultural Planner</Link></li>
+                <li><Link to="/events" className="hover:text-primary transition-colors">Festivals</Link></li>
+                <li><Link to="/map" className="hover:text-primary transition-colors">Heritage Map</Link></li>
+              </ul>
+            </div>
+
+            {/* Column 3: Services */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-white">Services</h3>
+              <ul className="space-y-3 text-sm text-slate-400">
+                <li><Link to="/guides" className="hover:text-primary transition-colors">Guides</Link></li>
+                <li><Link to="/shop" className="hover:text-primary transition-colors">Artisan Shop</Link></li>
+                <li><Link to="/safety" className="hover:text-primary transition-colors text-red-400">Emergency SOS</Link></li>
+                <li><Link to="/translate" className="hover:text-primary transition-colors">Translator</Link></li>
+              </ul>
+            </div>
+
+            {/* Column 4: Contact/Support */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-white">Support</h3>
+              <div className="text-sm text-slate-400 space-y-2">
+                <p>Helpline: <a href="tel:1800111363" className="text-white hover:text-primary">1800-11-1363</a></p>
+                <p><a href="mailto:contact@bharatyatra.gov.in" className="hover:text-primary">contact@bharatyatra.gov.in</a></p>
               </div>
             </div>
           </div>
 
           {/* Bottom Bar */}
-          <div className="mt-12 pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
-            <p>© {new Date().getFullYear()} Bharat Yatra Directorate. Developed for verified Indian cultural tourism.</p>
-            <div className="flex items-center gap-4">
-              <Link to="/safety" className="hover:text-foreground">Safety Advisories</Link>
-              <Link to="/admin" className="hover:text-foreground">Official Login</Link>
-              <Link to="/guides" className="hover:text-foreground">Guide Directory</Link>
+          <div className="mt-16 pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-6 text-sm text-slate-500">
+            <p>© {new Date().getFullYear()} Bharat Yatra Directorate.</p>
+            <div className="flex items-center gap-6">
+              <Link to="/safety" className="hover:text-white">Safety</Link>
+              <button onClick={() => setGuideModalOpen(true)} className="hover:text-white">Become a Guide</button>
+              <Link to="/guides" className="hover:text-white">Guides</Link>
             </div>
           </div>
         </div>

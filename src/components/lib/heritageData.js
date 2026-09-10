@@ -276,35 +276,132 @@ export const hotels = [
   { name: "Temple Town Lodge", city: "Khajuraho", amenities: "Wifi, Breakfast, AC", price: 2200, rating: 4.4 },
 ];
 
-// Approximate coordinates for heritage sites (for the interactive map)
+// High-precision coordinates for heritage sites across India
 export const siteCoords = {
-  khajuraho: [24.83, 79.92],
-  "taj-mahal": [27.17, 78.04],
-  "kerala-backwaters": [9.52, 76.26],
-  "hawa-mahal": [26.92, 75.83],
-  "varanasi-ghats": [25.31, 83.01],
-  hampi: [15.33, 76.46],
+  // Andhra Pradesh
+  "borra-caves": [18.2811, 83.0392],
+  "thotlakonda-buddhist-complex": [17.8252, 83.4158],
+  "simhachalam-temple": [17.7667, 83.2505],
+  "kailasagiri": [17.7490, 83.3420],
+  "ins-kursura": [17.7164, 83.3339],
+  "araku-valley": [18.3333, 82.8833],
+  "tirumala-temple": [13.6833, 79.3500],
+  "lepakshi-veerabhadra": [13.8034, 77.6062],
+  "amaravati-mahachaitya": [16.5744, 80.3575],
+  "undavalli-caves": [16.4975, 80.5814],
+  "srisailam-temple": [16.0744, 78.8686],
+  "gandikota-fort": [14.8144, 78.2861],
+  "belum-caves": [15.1025, 78.1114],
+
+  // Telangana
+  "golconda-fort": [17.3833, 78.4011],
+  "charminar": [17.3616, 78.4747],
+  "ramappa-temple": [18.2597, 79.9431],
+  "thousand-pillar-temple": [17.9986, 79.5775],
+  "qutb-shahi-tombs": [17.3892, 78.3942],
+  "chowmahalla-palace": [17.3578, 78.4717],
+  "bhadrachalam-temple": [17.6689, 80.8936],
+
+  // Uttar Pradesh
+  "taj-mahal": [27.1751, 78.0421],
+  "agra-fort": [27.1795, 78.0211],
+  "varanasi-ghats": [25.3109, 83.0104],
+  "sarnath-stupa": [25.3811, 83.0244],
+  "ayodhya-ram-mandir": [26.7922, 82.1998],
+  "fatehpur-sikri": [27.0945, 77.6679],
+
+  // Rajasthan
+  "hawa-mahal": [26.9239, 75.8267],
+  "amber-fort": [26.9855, 75.8513],
+  "mehrangarh-fort": [26.2978, 73.0186],
+  "city-palace-udaipur": [24.5764, 73.6835],
+  "jaisalmer-fort": [26.9124, 70.9124],
+
+  // Karnataka
+  hampi: [15.3350, 76.4600],
+  "mysore-palace": [12.3052, 76.6552],
+  "badami-caves": [15.9186, 75.6764],
+  "pattadakal-monuments": [15.9486, 75.8164],
+
+  // Tamil Nadu
+  "mahabalipuram-shore-temple": [12.6169, 80.1928],
+  "meenakshi-temple": [9.9195, 78.1193],
+  "brihadisvara-temple": [10.7828, 79.1319],
+
+  // Kerala
+  "kerala-backwaters": [9.4981, 76.3388],
+  "fort-kochi": [9.9656, 76.2425],
+  "munnar-hills": [10.0889, 77.0595],
+
+  // Delhi & NCR
+  "red-fort": [28.6562, 77.2410],
+  "qutub-minar": [28.5245, 77.1855],
+  "humayuns-tomb": [28.5933, 77.2507],
+
+  // Other National POIs
+  khajuraho: [24.8318, 79.9199],
+  "konark-sun-temple": [19.8876, 86.0945],
+  "golden-temple-amritsar": [31.6200, 74.8765],
+  "basilica-bom-jesus": [15.5009, 73.9116],
 };
 
-// Facility markers generated near each site
+// Verified emergency and utility facility markers near key heritage nodes
 export const facilities = [
-  { type: "hospital", name: "District Hospital", site: "taj-mahal", offset: [0.02, 0.03] },
-  { type: "petrol", name: "Indian Oil Pump", site: "taj-mahal", offset: [-0.015, 0.025] },
-  { type: "hotel", name: "Heritage Inn", site: "taj-mahal", offset: [0.01, -0.02] },
-  { type: "police", name: "Tourist Police Post", site: "taj-mahal", offset: [0.025, 0.01] },
-  { type: "hospital", name: "City Hospital", site: "varanasi-ghats", offset: [0.02, -0.03] },
-  { type: "petrol", name: "HP Petrol", site: "varanasi-ghats", offset: [0.015, 0.02] },
-  { type: "hotel", name: "Ganga View Guesthouse", site: "varanasi-ghats", offset: [-0.01, 0.015] },
-  { type: "police", name: "Ghats Police", site: "varanasi-ghats", offset: [0.03, 0.02] },
-  { type: "hospital", name: "Jaipur Hospital", site: "hawa-mahal", offset: [0.02, 0.03] },
-  { type: "petrol", name: "Bharat Petroleum", site: "hawa-mahal", offset: [-0.02, 0.02] },
-  { type: "hotel", name: "Pink City Haveli", site: "hawa-mahal", offset: [0.01, 0.025] },
-  { type: "police", name: "Jaipur Police", site: "hawa-mahal", offset: [0.025, -0.01] },
-  { type: "hospital", name: "Alappuzha General", site: "kerala-backwaters", offset: [0.02, 0.03] },
-  { type: "hotel", name: "Backwater Resort", site: "kerala-backwaters", offset: [-0.01, 0.02] },
-  { type: "police", name: "Alappuzha Police", site: "kerala-backwaters", offset: [0.015, -0.02] },
-  { type: "hospital", name: "Hampi PHC", site: "hampi", offset: [0.02, 0.02] },
-  { type: "hotel", name: "Temple Town Lodge", site: "hampi", offset: [-0.01, 0.015] },
+  // Visakhapatnam & Araku Hub
+  { type: "hospital", name: "King George Hospital (24/7 Trauma)", site: "simhachalam-temple", offset: [-0.03, 0.04], phone: "+91-891-2564891" },
+  { type: "police", name: "Tourist Police Assistance Booth (Vizag)", site: "ins-kursura", offset: [0.01, -0.01], phone: "1363" },
+  { type: "hotel", name: "Novotel Varun Beach 5-Star", site: "ins-kursura", offset: [-0.015, 0.02], phone: "+91-891-2822222" },
+  { type: "petrol", name: "IOCL Swarna Green EV & Petrol", site: "kailasagiri", offset: [0.02, 0.015], phone: "1033" },
+  { type: "hospital", name: "Araku Area Hospital & First Aid", site: "borra-caves", offset: [0.04, -0.05], phone: "108" },
+  { type: "police", name: "Ananthagiri Forest Range Police Post", site: "borra-caves", offset: [-0.02, 0.03], phone: "112" },
+  { type: "hotel", name: "APTDC Haritha Valley Resort", site: "araku-valley", offset: [0.015, -0.02], phone: "+91-8936-249490" },
+
+  // Tirupati Hub
+  { type: "hospital", name: "SVIMS Super Specialty Hospital", site: "tirumala-temple", offset: [-0.04, 0.05], phone: "+91-877-2287777" },
+  { type: "police", name: "TTD Vigilance & Tourist Police Post", site: "tirumala-temple", offset: [0.01, -0.01], phone: "1363" },
+  { type: "hotel", name: "Fortune Select Grand Ridge", site: "tirumala-temple", offset: [-0.06, 0.04], phone: "+91-877-2228555" },
+
+  // Hyderabad Hub
+  { type: "hospital", name: "Osmania General Trauma Hospital", site: "charminar", offset: [0.015, -0.02], phone: "108" },
+  { type: "police", name: "Charminar Tourist Police Station", site: "charminar", offset: [0.01, 0.01], phone: "1363" },
+  { type: "hotel", name: "Taj Falaknuma Palace Heritage", site: "charminar", offset: [-0.03, -0.02], phone: "+91-40-66298585" },
+  { type: "petrol", name: "HP Auto Fuel & EV Hub", site: "golconda-fort", offset: [-0.02, 0.03], phone: "1033" },
+
+  // Warangal & Ramappa Hub
+  { type: "hospital", name: "MGM Hospital Warangal", site: "thousand-pillar-temple", offset: [0.02, 0.02], phone: "108" },
+  { type: "police", name: "Kakatiya Tourism Police Desk", site: "ramappa-temple", offset: [0.01, -0.015], phone: "112" },
+
+  // Agra Hub
+  { type: "hospital", name: "S.N. Medical College & Trauma Care", site: "taj-mahal", offset: [0.02, 0.03], phone: "108" },
+  { type: "petrol", name: "Indian Oil Swarna Highway Pump", site: "taj-mahal", offset: [-0.015, 0.025], phone: "1033" },
+  { type: "hotel", name: "ITC Mughal Luxury Heritage", site: "taj-mahal", offset: [0.01, -0.02], phone: "+91-562-4021700" },
+  { type: "police", name: "Tajganj Tourist Police Station", site: "taj-mahal", offset: [0.025, 0.01], phone: "1363" },
+
+  // Varanasi Hub
+  { type: "hospital", name: "BHU Sir Sunderlal Hospital", site: "varanasi-ghats", offset: [0.02, -0.03], phone: "108" },
+  { type: "petrol", name: "HP Petrol & EV Station", site: "varanasi-ghats", offset: [0.015, 0.02], phone: "1033" },
+  { type: "hotel", name: "BrijRama Palace Heritage Ghats", site: "varanasi-ghats", offset: [-0.01, 0.015], phone: "+91-542-2450005" },
+  { type: "police", name: "Dashashwamedh Ghat Tourist Police", site: "varanasi-ghats", offset: [0.03, 0.02], phone: "1363" },
+
+  // Jaipur Hub
+  { type: "hospital", name: "SMS Hospital Trauma Center", site: "hawa-mahal", offset: [0.02, 0.03], phone: "108" },
+  { type: "petrol", name: "Bharat Petroleum Heritage Pump", site: "hawa-mahal", offset: [-0.02, 0.02], phone: "1033" },
+  { type: "hotel", name: "Rambagh Palace Heritage", site: "hawa-mahal", offset: [0.01, 0.025], phone: "+91-141-2211919" },
+  { type: "police", name: "Pink City Tourist Police Desk", site: "hawa-mahal", offset: [0.025, -0.01], phone: "1363" },
+
+  // Hampi Hub
+  { type: "hospital", name: "Hampi Primary Health Care & Ambulance", site: "hampi", offset: [0.02, 0.02], phone: "108" },
+  { type: "hotel", name: "KSTDC Hotel Mayura Bhuvaneshwari", site: "hampi", offset: [-0.01, 0.015], phone: "+91-8394-241570" },
+  { type: "police", name: "Hampi UNESCO Heritage Police Booth", site: "hampi", offset: [0.015, -0.02], phone: "1363" },
+
+  // Kerala Hub
+  { type: "hospital", name: "Alappuzha General Hospital", site: "kerala-backwaters", offset: [0.02, 0.03], phone: "108" },
+  { type: "hotel", name: "Kumarakom Lake Resort", site: "kerala-backwaters", offset: [-0.01, 0.02], phone: "+91-481-2524900" },
+  { type: "police", name: "Coastal Tourist Police Station", site: "kerala-backwaters", offset: [0.015, -0.02], phone: "1363" },
+
+  // Tamil Nadu Hub
+  { type: "hospital", name: "Apollo Speciality Hospital Madurai", site: "meenakshi-temple", offset: [0.025, 0.02], phone: "108" },
+  { type: "police", name: "Shore Temple Tourism Security Booth", site: "mahabalipuram-shore-temple", offset: [0.01, -0.01], phone: "1363" },
 ];
 
 export const events = [

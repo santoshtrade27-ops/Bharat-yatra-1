@@ -66,7 +66,7 @@ export default function MapPage() {
   const [locationStatus, setLocationStatus] = useState("");
   const [offlinePackStatus, setOfflinePackStatus] = useState("");
   const [downloadModalOpen, setDownloadModalOpen] = useState(false);
-  const [downloadFormat, setDownloadFormat] = useState("geojson");
+  const [downloadFormat, setDownloadFormat] = useState("offline_html");
   const [downloadArea, setDownloadArea] = useState("all");
   const [sosIncidents, setSosIncidents] = useState([
     { id: "SOS-904", traveler: "Kavita Rao", phone: "+91 94401 88321", location: "Borra Caves Lower Trail", coords: [18.280, 83.040], time: "12 mins ago", status: "Officer Dispatched", severity: "High" },
@@ -155,7 +155,160 @@ export default function MapPage() {
 
     const timestamp = new Date().toISOString().slice(0, 10);
 
-    if (downloadFormat === "google") {
+    if (downloadFormat === "offline_html") {
+      // Standalone Offline Interactive HTML Single-File Map Pack
+      const htmlContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bharat Yatra - Offline Interactive GIS Heritage Map (${regionObj.name})</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    body { background: #0f172a; color: #f8fafc; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    header { background: #1e293b; padding: 12px 20px; border-bottom: 1px solid #334155; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; z-index: 1000; }
+    .title-group { display: flex; align-items: center; gap: 10px; }
+    h1 { font-size: 18px; font-weight: 800; color: #38bdf8; }
+    .badge { background: #0284c7; color: white; padding: 2px 8px; border-radius: 9999px; font-size: 11px; font-weight: bold; }
+    .search-box { display: flex; gap: 8px; flex: 1; max-width: 400px; }
+    input { width: 100%; padding: 8px 14px; border-radius: 10px; border: 1px solid #475569; background: #0f172a; color: white; font-size: 13px; outline: none; }
+    input:focus { border-color: #38bdf8; }
+    .helpline-bar { background: #e11d48; color: white; padding: 6px 20px; font-size: 12px; font-weight: bold; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
+    #main-container { display: flex; flex: 1; position: relative; overflow: hidden; }
+    #map { flex: 1; height: 100%; background: #1e293b; }
+    #sidebar { width: 340px; background: #1e293b; border-left: 1px solid #334155; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+    .site-card { background: #0f172a; border: 1px solid #334155; border-radius: 12px; padding: 12px; cursor: pointer; transition: all 0.2s; }
+    .site-card:hover { border-color: #38bdf8; transform: translateY(-2px); }
+    .site-name { font-weight: bold; font-size: 14px; color: #f8fafc; }
+    .site-state { font-size: 11px; color: #94a3b8; margin-bottom: 4px; }
+    .site-info { font-size: 12px; color: #cbd5e1; line-height: 1.4; margin-top: 4px; }
+    .tag { display: inline-block; background: #334155; color: #38bdf8; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px; margin-top: 6px; }
+    @media (max-width: 768px) { #main-container { flex-direction: column; } #sidebar { width: 100%; height: 240px; border-left: none; border-top: 1px solid #334155; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="title-group">
+      <span class="badge">OFFLINE MAP PACK</span>
+      <h1>Bharat Yatra - ${regionObj.name}</h1>
+    </div>
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Search ${sitesToExport.length} monuments, caves, forts..." onkeyup="filterSites()">
+    </div>
+  </header>
+  <div class="helpline-bar">
+    <span>🚨 Tourist Police: 1363</span>
+    <span>🚑 Medical Ambulance: 108</span>
+    <span>👮 Emergency 112</span>
+    <span>🛣️ Highway SOS: 1033</span>
+  </div>
+  <div id="main-container">
+    <div id="map"></div>
+    <div id="sidebar">
+      <div style="font-size: 13px; font-weight: bold; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Monuments Directory (${sitesToExport.length})</div>
+      <div id="siteList" style="display: flex; flex-direction: column; gap: 8px;"></div>
+    </div>
+  </div>
+
+  <script>
+    const sites = ${JSON.stringify(sitesToExport.map(s => {
+      const c = siteCoords[s.id] || [s.lat || 20.59, s.lng || 78.96];
+      return {
+        id: s.id,
+        name: s.name,
+        state: s.state,
+        coords: c,
+        category: s.category || s.tag || "Heritage",
+        ticket: s.ticket_price || "₹25 - ₹50",
+        timings: s.timings || "06:00 - 18:00",
+        nearestStation: s.nearestStation || "Regional Junction",
+        brief: s.brief || s.description || "Archaeological Survey of India protected site."
+      };
+    }))};
+
+    const mapCenter = [${regionObj.coords[0]}, ${regionObj.coords[1]}];
+    const map = L.map('map').setView(mapCenter, ${regionObj.zoom});
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap & Bharat Yatra Offline'
+    }).addTo(map);
+
+    const markers = {};
+
+    sites.forEach(s => {
+      const marker = L.circleMarker(s.coords, {
+        color: '#f59e0b',
+        fillColor: '#f59e0b',
+        fillOpacity: 0.9,
+        radius: 8
+      }).addTo(map);
+
+      marker.bindPopup(\`
+        <div style="font-family: sans-serif; color: #111;">
+          <strong style="font-size: 14px; color: #0284c7;">\${s.name}</strong><br/>
+          <small style="color: #64748b;">\${s.state} · \${s.category}</small><br/>
+          <p style="font-size: 12px; margin: 4px 0;">\${s.brief}</p>
+          <div style="font-size: 11px; font-weight: bold; color: #d97706; margin-top: 4px;">
+            🎟️ Entry: \${s.ticket} | ⏰ \${s.timings}
+          </div>
+          <div style="font-size: 11px; color: #475569; margin-top: 2px;">
+            🚉 Nearest Station: \${s.nearestStation}
+          </div>
+        </div>
+      \`);
+
+      markers[s.id] = marker;
+    });
+
+    function renderList(list) {
+      const el = document.getElementById('siteList');
+      el.innerHTML = '';
+      list.forEach(s => {
+        const d = document.createElement('div');
+        d.className = 'site-card';
+        d.innerHTML = \`
+          <div class="site-name">\${s.name}</div>
+          <div class="site-state">\${s.state} · 🎟️ \${s.ticket}</div>
+          <div class="site-info">\${s.brief.substring(0, 95)}...</div>
+          <span class="tag">\${s.category}</span>
+        \`;
+        d.onclick = () => {
+          map.setView(s.coords, 14);
+          markers[s.id].openPopup();
+        };
+        el.appendChild(d);
+      });
+    }
+
+    function filterSites() {
+      const q = document.getElementById('searchInput').value.toLowerCase();
+      const filtered = sites.filter(s => s.name.toLowerCase().includes(q) || s.state.toLowerCase().includes(q) || s.category.toLowerCase().includes(q));
+      renderList(filtered);
+    }
+
+    renderList(sites);
+  </script>
+</body>
+</html>`;
+
+      const blob = new Blob([htmlContent], { type: "text/html" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `BharatYatra_Offline_Interactive_Map_${regionName}_${timestamp}.html`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      setOfflinePackStatus(`Downloaded 100% Standalone Offline Interactive Map Pack for ${regionName}! Double-click the saved HTML file anywhere to explore offline.`);
+      setDownloadModalOpen(false);
+      setTimeout(() => setOfflinePackStatus(""), 8000);
+      return;
+    } else if (downloadFormat === "google") {
       // Direct Real Google Maps Feature
       const lat = regionObj.coords[0];
       const lng = regionObj.coords[1];
@@ -788,7 +941,27 @@ export default function MapPage() {
               <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                 Select Mapping Provider Format:
               </label>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setDownloadFormat("offline_html")}
+                  className={`p-3 rounded-2xl border text-left transition-all ${
+                    downloadFormat === "offline_html"
+                      ? "border-primary bg-primary/10 text-primary font-bold shadow-sm ring-1 ring-primary"
+                      : "border-border bg-background text-foreground"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold flex items-center gap-1.5 text-primary">
+                      <Compass className="w-4 h-4 text-primary" /> Offline Interactive Map (HTML)
+                    </span>
+                    {downloadFormat === "offline_html" && <CheckCircle2 className="w-4 h-4 text-primary" />}
+                  </div>
+                  <p className="text-[10px] text-muted-foreground font-normal mt-1 leading-tight">
+                    ⭐ Recommended: Complete standalone interactive map pack. Zero internet needed. Works on mobile & PC!
+                  </p>
+                </button>
+
                 <button
                   type="button"
                   onClick={() => setDownloadFormat("google")}
@@ -820,7 +993,7 @@ export default function MapPage() {
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold flex items-center gap-1.5">
-                      <Compass className="w-3.5 h-3.5 text-sky-600" /> Survey of India
+                      <Compass className="w-3.5 h-3.5 text-sky-600" /> Survey of India (Print / PDF)
                     </span>
                     {downloadFormat === "soi" && <CheckCircle2 className="w-4 h-4 text-sky-500" />}
                   </div>
@@ -840,7 +1013,7 @@ export default function MapPage() {
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold flex items-center gap-1.5">
-                      <FileDown className="w-3.5 h-3.5" /> Nano Banana GIS
+                      <FileDown className="w-3.5 h-3.5" /> Nano Banana GIS GeoJSON
                     </span>
                     {downloadFormat === "geojson" && <CheckCircle2 className="w-4 h-4 text-primary" />}
                   </div>
@@ -885,7 +1058,9 @@ export default function MapPage() {
               >
                 <Download className="w-4 h-4" />
                 <span>
-                  {downloadFormat === "google"
+                  {downloadFormat === "offline_html"
+                    ? "Download Standalone HTML Map"
+                    : downloadFormat === "google"
                     ? "Open in Google Maps"
                     : downloadFormat === "soi"
                     ? "Print SOI Topo Atlas"

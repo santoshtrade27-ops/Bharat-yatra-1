@@ -4,6 +4,7 @@ import { Image } from "@/components/ui/image";
 import { addToCart } from "@/lib/cart";
 import { useI18n } from "@/lib/i18n";
 import { getLocalizedProduct } from "@/lib/itemTranslations";
+import ThreeDTiltCard from "@/components/ui/ThreeDTiltCard";
 
 export default function ProductCard({ product: rawProduct, onSelect }) {
   const { lang, t } = useI18n();
@@ -25,11 +26,15 @@ export default function ProductCard({ product: rawProduct, onSelect }) {
   }
 
   return (
-    <div 
+    <ThreeDTiltCard
+      maxTilt={10}
+      scale={1.03}
+      glare={true}
+      depth="15px"
       onClick={() => onSelect && onSelect(product)}
-      className="group flex flex-col rounded-3xl overflow-hidden bg-card shadow-xs ring-1 ring-border hover:ring-primary/40 hover:shadow-lg transition-all duration-300 cursor-pointer"
+      className="group flex flex-col rounded-3xl overflow-hidden bg-card shadow-xs ring-1 ring-border hover:ring-amber-500/40 hover:shadow-2xl transition-all duration-300 h-full"
     >
-      <div className="relative h-52 overflow-hidden bg-muted">
+      <div className="relative h-52 overflow-hidden bg-muted rounded-t-3xl">
         <Image 
           src={product.image || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600&auto=format&fit=crop&q=80"} 
           alt={name} 
@@ -37,7 +42,10 @@ export default function ProductCard({ product: rawProduct, onSelect }) {
           fittingType="fill" 
         />
         {discount > 0 && (
-          <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-primary text-primary-foreground text-xs font-bold shadow-sm">
+          <span
+            className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-primary text-primary-foreground text-xs font-bold shadow-md"
+            style={{ transform: "translateZ(25px)" }}
+          >
             {discount}% OFF
           </span>
         )}
@@ -48,6 +56,7 @@ export default function ProductCard({ product: rawProduct, onSelect }) {
             onSelect && onSelect(product);
           }}
           className="absolute top-3 right-3 w-8 h-8 rounded-full bg-background/80 hover:bg-background text-foreground grid place-items-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-xs shadow-xs"
+          style={{ transform: "translateZ(25px)" }}
           title="Inspect craft story and ratings"
         >
           <Eye className="w-4 h-4" />
@@ -67,7 +76,10 @@ export default function ProductCard({ product: rawProduct, onSelect }) {
             </span>
           </div>
 
-          <h3 className="font-bold text-base text-foreground line-clamp-1 group-hover:text-primary transition-colors font-heading">
+          <h3
+            className="font-bold text-base text-foreground line-clamp-1 group-hover:text-primary transition-colors font-heading"
+            style={{ transform: "translateZ(15px)" }}
+          >
             {name}
           </h3>
           <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed line-clamp-2">
@@ -125,6 +137,7 @@ export default function ProductCard({ product: rawProduct, onSelect }) {
           </div>
         </div>
       </div>
-    </div>
+    </ThreeDTiltCard>
   );
 }
+

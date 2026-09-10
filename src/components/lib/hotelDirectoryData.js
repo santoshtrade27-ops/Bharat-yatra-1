@@ -719,48 +719,69 @@ export const governmentRecognizedHotels = [
   }
 ];
 
+// Helper to get dynamic hotels list (persisted in localStorage)
+export function getSavedHotels() {
+  try {
+    const saved = localStorage.getItem("by-hotels-directory");
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch (e) {}
+  return governmentRecognizedHotels;
+}
+
+export function saveHotels(hotels) {
+  try {
+    localStorage.setItem("by-hotels-directory", JSON.stringify(hotels));
+    window.dispatchEvent(new CustomEvent("by-hotels-updated", { detail: hotels }));
+  } catch (e) {}
+}
+
 // Helper to find hotels by city query with robust matching
 export function getHotelsForCity(cityOrDestination) {
-  if (!cityOrDestination) return governmentRecognizedHotels.slice(0, 8);
+  const allHotels = getSavedHotels();
+  if (!cityOrDestination) return allHotels.slice(0, 8);
   const q = cityOrDestination.trim().toLowerCase();
   
   // Direct city or state match
-  const matched = governmentRecognizedHotels.filter(h => 
-    h.city.toLowerCase().includes(q) || 
-    q.includes(h.city.toLowerCase()) ||
-    h.district.toLowerCase().includes(q) ||
-    h.state.toLowerCase().includes(q) ||
-    h.location.toLowerCase().includes(q)
+  const matched = allHotels.filter(h => 
+    (h.city && h.city.toLowerCase().includes(q)) || 
+    (q.includes(h.city?.toLowerCase() || "")) ||
+    (h.district && h.district.toLowerCase().includes(q)) ||
+    (h.state && h.state.toLowerCase().includes(q)) ||
+    (h.location && h.location.toLowerCase().includes(q))
   );
 
   if (matched.length > 0) return matched;
 
   // Partial or alias checks
   if (q.includes("vizag") || q.includes("visakh") || q.includes("rushikonda")) {
-    return governmentRecognizedHotels.filter(h => h.city === "Visakhapatnam");
+    return allHotels.filter(h => h.city === "Visakhapatnam");
   }
   if (q.includes("hyd") || q.includes("secund") || q.includes("charminar") || q.includes("golconda")) {
-    return governmentRecognizedHotels.filter(h => h.city === "Hyderabad");
+    return allHotels.filter(h => h.city === "Hyderabad");
   }
   if (q.includes("tiru") || q.includes("balaji") || q.includes("venkateswara")) {
-    return governmentRecognizedHotels.filter(h => h.city === "Tirupati");
+    return allHotels.filter(h => h.city === "Tirupati");
   }
   if (q.includes("vijay") || q.includes("bezawada") || q.includes("kanaka")) {
-    return governmentRecognizedHotels.filter(h => h.city === "Vijayawada");
+    return allHotels.filter(h => h.city === "Vijayawada");
   }
   if (q.includes("delhi") || q.includes("ncr") || q.includes("new delhi")) {
-    return governmentRecognizedHotels.filter(h => h.city === "Delhi");
+    return allHotels.filter(h => h.city === "Delhi");
   }
   if (q.includes("agra") || q.includes("taj")) {
-    return governmentRecognizedHotels.filter(h => h.city === "Agra");
+    return allHotels.filter(h => h.city === "Agra");
   }
   if (q.includes("jaipur") || q.includes("pink")) {
-    return governmentRecognizedHotels.filter(h => h.city === "Jaipur");
+    return allHotels.filter(h => h.city === "Jaipur");
   }
   if (q.includes("varanasi") || q.includes("kashi") || q.includes("banaras")) {
-    return governmentRecognizedHotels.filter(h => h.city === "Varanasi");
+    return allHotels.filter(h => h.city === "Varanasi");
   }
 
   // Fallback: provide top verified hotels
-  return governmentRecognizedHotels.slice(0, 6);
+  return allHotels.slice(0, 6);
 }
+

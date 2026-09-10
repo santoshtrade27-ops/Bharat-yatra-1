@@ -59,18 +59,32 @@ export function clearCart() {
 
 export function checkout(info) {
   const total = state.reduce((s, i) => s + i.price * i.qty, 0);
+  const randomSuffix = Math.floor(100000 + Math.random() * 900000);
+  const uniqueId = `BY-ART-${randomSuffix}`;
   const order = {
-    id: "ORD" + Date.now(),
-    items: state,
+    id: uniqueId,
+    orderId: uniqueId,
+    items: [...state],
     total,
     date: new Date().toISOString(),
+    status: info?.paymentMethod === "COD" ? "Confirmed" : "Confirmed",
+    paymentStatus: info?.paymentMethod === "COD" ? "Pending (Cash on Delivery)" : "Paid (Online Gateway)",
     ...info,
   };
   const orders = getOrders();
   orders.unshift(order);
   localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
   clearCart();
+  window.dispatchEvent(new CustomEvent("by-orders-updated", { detail: order }));
   return order;
+}
+
+export function updateOrderStatus(orderId, newStatus) {
+  const orders = getOrders();
+  const updated = orders.map((o) => (o.id === orderId || o.orderId === orderId ? { ...o, status: newStatus } : o));
+  localStorage.setItem(ORDERS_KEY, JSON.stringify(updated));
+  window.dispatchEvent(new CustomEvent("by-orders-updated", { detail: { orderId, newStatus } }));
+  return updated;
 }
 
 export function getOrders() {

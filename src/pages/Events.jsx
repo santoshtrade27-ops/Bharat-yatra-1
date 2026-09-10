@@ -17,7 +17,7 @@ const enrichedEvents = [
     city: "Prayagraj",
     month: "January–February",
     category: "Sacred & Temple",
-    image: "https://media.base44.com/images/public/6a9bae9fd15b41c75cea5237/a6ea9039a_generated_6bf653a0.jpg",
+    image: "https://www.google.com/imgres?q=maha%20kumbh%20mela%20image&imgurl=https%3A%2F%2Fc9admin.cottage9.com%2Fuploads%2F5612%2Fmahakumbh-2025.jpg&imgrefurl=https%3A%2F%2Fwww.cottage9.com%2Fblog%2Fmahakumbh-mela-2025-a-spiritual-journey-of-a-lifetime%2F&docid=s-e4N558utcueM&tbnid=vNKRgKsX2Lpf_M&vet=12ahUKEwi7up_5k-SWAxW-SGwGHXU8NwsQnPAOegQIRRAA..i&w=980&h=692&hcb=2&ved=2ahUKEwi7up_5k-SWAxW-SGwGHXU8NwsQnPAOegQIRRAA",
     timing: "Sacred Shahi Snan dips begin at 4:00 AM; Aarti at 6:30 PM",
     dress: "Simple modest cotton dhotis or kurtas; warm layers for cold mornings",
     rules: "Follow designated one-way pontoon bridges; do not carry valuable jewelry to the ghats",
@@ -215,6 +215,55 @@ export default function Events() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    const loadEvents = () => {
+      const coreList = [...enrichedEvents];
+      try {
+        const saved = localStorage.getItem("by-admin-entity-events");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            parsed.forEach((e) => {
+              const idx = coreList.findIndex(x => x.id === e.id || x.name.toLowerCase() === e.name.toLowerCase());
+              const formatted = {
+                id: e.id,
+                name: e.name,
+                state: e.state || "India",
+                city: e.city || "",
+                month: e.month || "Year-round",
+                category: e.category || "Sacred & Temple",
+                image: e.image || "https://images.unsplash.com/photo-1548013146-72479768bada?w=500&auto=format&fit=crop&q=80",
+                timing: e.timing || "Check local schedule",
+                dress: e.dress || "Modest smart casuals",
+                rules: e.rules || "Follow local rules",
+                history: e.history || e.description || "",
+                crowdDensity: e.crowdDensity || "Moderate",
+                crowdRating: e.crowdRating || "4/5",
+                bestVisitingHours: e.bestVisitingHours || "Morning or Evening",
+                scamWarning: e.scamWarning || "Be aware of local guides.",
+                wikiQuery: e.wikiQuery || "",
+                youtubeQuery: e.youtubeQuery || "",
+                aiPlan: e.aiPlan || {
+                  summary: e.description || "Exciting traditional celebration!",
+                  day1: "Arrive and explore local attractions.",
+                  day2: "Enjoy primary festival day activities.",
+                  day3: "Savor local cuisine and purchase regional souvenirs.",
+                  familyTips: "Keep hydrated and follow crowd pathways.",
+                }
+              };
+              if (idx !== -1) {
+                coreList[idx] = { ...coreList[idx], ...formatted };
+              } else {
+                coreList.unshift(formatted);
+              }
+            });
+          }
+        }
+      } catch {}
+      setEvents(coreList);
+    };
+
+    loadEvents();
+
     base44.entities.Event.list("-created_date", 100).then((list) => {
       if (list && list.length) {
         setEvents((prev) => {
@@ -224,6 +273,9 @@ export default function Events() {
         });
       }
     }).catch(() => {});
+
+    window.addEventListener("by-events-updated", loadEvents);
+    return () => window.removeEventListener("by-events-updated", loadEvents);
   }, []);
 
   const categories = [

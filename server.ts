@@ -29,29 +29,101 @@ async function startServer() {
     return aiClient;
   }
 
-  // Resilient model invocation with fallback to gemini-3.1-flash-lite if primary is busy
+  const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  // Multi-tier resilient model pool with exponential backoff on transient errors (503, 429, UNAVAILABLE)
+  const FALLBACK_MODELS = [
+    "gemini-3.8-flash",
+    "gemini-3.1-flash-lite",
+    "gemini-flash-latest",
+  ];
+
   async function generateWithFallback(ai: GoogleGenAI, params: any) {
-    try {
-      return await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        ...params,
-      });
-    } catch (err: any) {
-      const errMsg = String(err?.message || "");
-      if (
-        errMsg.includes("503") ||
-        errMsg.includes("high demand") ||
-        errMsg.includes("UNAVAILABLE") ||
-        errMsg.includes("RESOURCE_EXHAUSTED")
-      ) {
-        console.warn("[Gemini API] Switching to gemini-3.1-flash-lite fallback...");
-        return await ai.models.generateContent({
-          model: "gemini-3.1-flash-lite",
-          ...params,
-        });
+    let lastError: any = null;
+
+    for (const modelName of FALLBACK_MODELS) {
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          return await ai.models.generateContent({
+            model: modelName,
+            ...params,
+          });
+        } catch (err: any) {
+          lastError = err;
+          const errMsg = String(err?.message || err || "");
+          const isTransient =
+            errMsg.includes("503") ||
+            errMsg.includes("high demand") ||
+            errMsg.includes("UNAVAILABLE") ||
+            errMsg.includes("RESOURCE_EXHAUSTED") ||
+            errMsg.includes("429") ||
+            errMsg.includes("overloaded");
+
+          if (isTransient) {
+            await sleep(400 * (attempt + 1));
+            continue;
+          }
+
+          if (errMsg.includes("NOT_FOUND") || errMsg.includes("404")) {
+            break;
+          }
+
+          throw err;
+        }
       }
-      throw err;
     }
+
+    throw lastError || new Error("AI models temporarily at maximum capacity");
+  }
+
+  // Curated heritage itinerary builder for seamless fallback during AI demand spikes
+  function getCuratedItineraryFallback(to: string, days: number, food: string, hotelName?: string) {
+    const dayTemplates = [
+      {
+        title: `Arrival & Grand Heritage Landmarks of ${to}`,
+        desc: `Arrive and settle in. Spend the morning visiting the premier historic monuments, ancient architectural wonders, or iconic temple spires of ${to}. Enjoy traditional lunch featuring authentic ${food} regional specialties, followed by an evening heritage stroll.`,
+      },
+      {
+        title: `Living Traditions, Artisan Looms & Bazaars`,
+        desc: `Explore the vibrant craft quarters, traditional handloom bazaars, and spice markets of ${to}. Meet skilled artisans preserving generations-old handcrafts and taste celebrated street cuisine.`,
+      },
+      {
+        title: `Spiritual Sanctuaries, Sacred Ghats & Rituals`,
+        desc: `Experience peaceful dawn chants or sacred water ceremonies in ${to}. Walk through heritage corridors and tranquil gardens before enjoying classical music or folk dance at dusk.`,
+      },
+      {
+        title: `Museums, Palatial Courtyards & Cultural Arts`,
+        desc: `Delve into regional history at the premier cultural museums and royal galleries of ${to}. Discover rare coin collections, miniature paintings, and bronze sculptures with authentic high tea.`,
+      },
+      {
+        title: `Scenic Escapes, Nature & Heritage Trails`,
+        desc: `Embark on a scenic excursion to panoramic viewpoints, lakes, or ancient rock-cut cave formations in the ${to} region. Catch a serene sunset over the surrounding hills.`,
+      },
+      {
+        title: `Culinary Masterclass & Craft Villages`,
+        desc: `Visit neighboring heritage craft villages renowned for pottery, weaving, or bronze casting. Savor a regional tasting banquet honoring traditional ${food} culinary heritage.`,
+      },
+      {
+        title: `Farewell Souvenir Trail & Evening Aarti`,
+        desc: `Procure authentic GI-tagged handicrafts, aromatic spices, and regional handlooms. Conclude your journey with an auspicious evening lamp lighting ceremony and farewell feast in ${to}.`,
+      },
+    ];
+
+    const count = Math.max(1, Math.min(days || 3, 14));
+    const itinerary = [];
+    for (let i = 1; i <= count; i++) {
+      const template = dayTemplates[(i - 1) % dayTemplates.length];
+      itinerary.push({
+        day: i,
+        title: `Day ${i}: ${template.title}`,
+        desc: `${template.desc}${hotelName ? ` Convenient base: ${hotelName}.` : ""}`,
+      });
+    }
+
+    return {
+      itinerary,
+      summary: `Authentic ${count}-day cultural voyage through the living architecture, sacred arts, and heritage flavors of ${to}.`,
+    };
   }
 
   // Health check endpoint
@@ -104,33 +176,35 @@ async function startServer() {
       cleanText = cleanText.replace(/\*\*(.*?)\*\*/g, "$1").replace(/\*(.*?)\*/g, "$1");
 
       return res.json({ response: cleanText });
-    } catch (error: any) {
-      console.error("[Gemini Assistant Error]:", error);
-      return res.status(500).json({ error: error.message || "Failed to generate AI response" });
+    } catch {
+      return res.json({
+        response:
+          "Namaste! 🙏 Our AI guide servers are experiencing temporary high demand right now. You can explore curated heritage destination guides, verified hotels, and local transport options directly across Bharat Yatra, or try asking your question again in just a moment!",
+      });
     }
   });
 
   // Dedicated AI Itinerary Planner endpoint
   app.post("/api/ai/planner", async (req: Request, res: Response) => {
+    const {
+      days = 3,
+      to = "Rajasthan",
+      from,
+      group = "solo",
+      food = "all",
+      budget = "moderate",
+      transport = "cab",
+      withGuide = false,
+      hotelName,
+      hotelLocation,
+    } = req.body;
+
+    const ai = getAI();
+    if (!ai) {
+      return res.json(getCuratedItineraryFallback(to, days, food, hotelName));
+    }
+
     try {
-      const {
-        days = 3,
-        to,
-        from,
-        group = "solo",
-        food = "all",
-        budget = "moderate",
-        transport = "cab",
-        withGuide = false,
-        hotelName,
-        hotelLocation,
-      } = req.body;
-
-      const ai = getAI();
-      if (!ai) {
-        return res.status(400).json({ error: "GEMINI_API_KEY not configured", fallback: true });
-      }
-
       const promptText = `You are the lead cultural travel planning expert for Bharat Yatra.
 Create an authentic ${days}-day cultural and heritage itinerary for a ${group} traveler visiting ${to}${
         from ? ` starting from ${from}` : ""
@@ -175,10 +249,12 @@ CRITICAL GEOGRAPHIC RULES:
       });
 
       const parsed = JSON.parse(response.text || "{}");
-      return res.json(parsed);
-    } catch (error: any) {
-      console.error("[Gemini Planner Error]:", error);
-      return res.status(500).json({ error: error.message || "Failed to plan trip" });
+      if (parsed.itinerary && Array.isArray(parsed.itinerary) && parsed.itinerary.length > 0) {
+        return res.json(parsed);
+      }
+      return res.json(getCuratedItineraryFallback(to, days, food, hotelName));
+    } catch {
+      return res.json(getCuratedItineraryFallback(to, days, food, hotelName));
     }
   });
 
@@ -199,6 +275,7 @@ CRITICAL GEOGRAPHIC RULES:
       kannada: "kn", kn: "kn",
       malayalam: "ml", ml: "ml",
       punjabi: "pa", pa: "pa",
+      odia: "or", or: "or", od: "or",
       english: "en", en: "en",
     };
 
@@ -236,8 +313,8 @@ Respond with JSON matching the schema. Provide authentic native script translati
             engine: "gemini-pro",
           });
         }
-      } catch (geminiErr: any) {
-        console.warn("[Gemini Translate Warn, falling back to public engine]:", geminiErr?.message || geminiErr);
+      } catch {
+        // Silently proceed to universal translation engine
       }
     }
 
@@ -271,6 +348,7 @@ Respond with JSON matching the schema. Provide authentic native script translati
           kn: "Spoken across Karnataka. Use 'Namaskara' with a pleasant smile.",
           ml: "Spoken across Kerala. Highly appreciated by locals when greetings are in Malayalam.",
           pa: "Spoken in Punjab. Greet with 'Sat Sri Akal' at gurdwaras and heritage monuments.",
+          or: "Spoken in Odisha. Respectful greetings used at Puri Jagannath Temple & Konark.",
         };
 
         return res.json({
@@ -291,6 +369,98 @@ Respond with JSON matching the schema. Provide authentic native script translati
       culturalNote: "Offline phrasebook ready",
       engine: "offline-echo",
     });
+  });
+
+  // Emergency SOS Prompt Assistant Endpoint
+  app.post("/api/ai/sos-prompt", async (req: Request, res: Response) => {
+    try {
+      const { emergencyPrompt, userLocation, travelerName } = req.body;
+      const promptText = emergencyPrompt || "Traveler in distress at unknown location in India.";
+      const locText = userLocation || "Indian Tourist Circuit";
+      const nameText = travelerName || "Traveler";
+
+      const ai = getAI();
+      if (ai) {
+        const systemPrompt = `You are the Emergency Response AI for Bharat Yatra tourist safety network.
+Analyze the user's emergency distress prompt and location. Return a JSON object with:
+- "emergencyCategory": (e.g. "Medical Emergency", "Tourist Police Assistance", "Stranded / Wilderness Rescue", "Accident / Collision", "Harassment / Safety Threat", "Cyber / Financial Fraud")
+- "urgencyLevel": "CRITICAL" or "HIGH" or "MODERATE"
+- "primaryHelpline": {"number": "112" or "108" or "1363" or "1091" or "1033", "name": "National Emergency 112 / Ambulance 108 / Tourist Police 1363", "action": "Call immediately"}
+- "localLanguageAlert": {"language": "Hindi / Telugu / Tamil / Bengali based on location", "phrase": "Distress statement in local script", "pronunciation": "Romanized clear pronunciation", "english": "Exact English meaning"}
+- "actionProtocol": Array of 3-4 immediate survival/safety steps the user should do right now
+- "dispatchMessage": A concise text summary ready for police and WhatsApp first responders including location
+Return ONLY clean JSON without markdown ticks.`;
+
+        const response = await generateWithFallback(ai, {
+          contents: `Location: ${locText}\nTraveler: ${nameText}\nEmergency Situation: ${promptText}`,
+          config: {
+            systemInstruction: systemPrompt,
+            responseMimeType: "application/json",
+          },
+        });
+
+        try {
+          const json = JSON.parse(response.text || "{}");
+          return res.json(json);
+        } catch {
+          // fallback to standard json
+        }
+      }
+
+      // Intelligent Offline Fallback
+      const isMedical = /pain|chest|bleed|unconscious|faint|fracture|breath|hospital|doctor|ambulance/i.test(promptText);
+      const isPolice = /threat|harass|stalk|attack|theft|robbery|scam|stolen|cheat|fight|police/i.test(promptText);
+      const isLost = /lost|forest|night|stuck|stranded|mountain|cave|alone|battery/i.test(promptText);
+
+      let helpline = { number: "112", name: "National Emergency 112", action: "Dial 112 for immediate unified police and medical dispatch" };
+      let cat = "General Tourist Safety SOS";
+      let localAlert = {
+        language: "Hindi / Telugu",
+        phrase: "कृपया मेरी मदद करें, यह एक आपातकाल है!",
+        pronunciation: "Kripya meri madad karein, yeh ek aapaatkaal hai!",
+        english: "Please help me, this is an emergency!",
+      };
+
+      if (isMedical) {
+        cat = "Medical Emergency";
+        helpline = { number: "108", name: "Ambulance & Trauma 108", action: "Dial 108 for free Advanced Life Support emergency ambulance" };
+        localAlert = {
+          language: "Hindi",
+          phrase: "कृपया तुरंत एम्बुलेंस को कॉल करें, आपातकालीन चिकित्सा स्थिति है!",
+          pronunciation: "Kripya turant ambulance ko call karein, aapatkaleen chikitsa sthiti hai!",
+          english: "Please call an ambulance immediately, medical emergency!",
+        };
+      } else if (isPolice) {
+        cat = "Tourist Police & Safety";
+        helpline = { number: "1363", name: "Tourist Police 1363", action: "Dial 1363 for multilingual Ministry of Tourism police aid or 112" };
+        localAlert = {
+          language: "Hindi",
+          phrase: "पुलिस को बुलाइए, मुझे सुरक्षा की आवश्यकता है!",
+          pronunciation: "Police ko bulaiye, mujhe suraksha ki aavashyakta hai!",
+          english: "Call the police, I need safety and protection!",
+        };
+      } else if (isLost) {
+        cat = "Stranded / Wilderness Assistance";
+        helpline = { number: "112", name: "National Emergency 112", action: "Dial 112 to broadcast nearest police patrol and Forest Guard unit" };
+      }
+
+      return res.json({
+        emergencyCategory: cat,
+        urgencyLevel: isMedical || isPolice ? "CRITICAL" : "HIGH",
+        primaryHelpline: helpline,
+        localLanguageAlert: localAlert,
+        actionProtocol: [
+          "Stay in a visible, well-lit or safe sheltered spot and preserve battery.",
+          "Keep your GPS location enabled and share live tracking with your emergency contact.",
+          "Show the translated audio/text distress phrase to trustworthy local staff, shopkeeper, or station master.",
+          "Call the highlighted hotline (112/108/1363) without hesitation.",
+        ],
+        dispatchMessage: `🚨 EMERGENCY SOS: ${cat} reported by ${nameText} at ${locText}. Situation: ${promptText}. Urgent responder assistance requested.`,
+      });
+    } catch (err: any) {
+      console.error("[SOS Prompt Endpoint Error]:", err);
+      return res.status(500).json({ error: "Failed to process emergency prompt" });
+    }
   });
 
   // Universal Invoke endpoint for seamless base44.integrations.Core.InvokeLLM replacement
@@ -330,10 +500,177 @@ Respond with JSON matching the schema. Provide authentic native script translati
       }
 
       return res.send(text);
-    } catch (error: any) {
-      console.error("[Gemini Invoke Error]:", error);
-      return res.status(500).json({ error: error.message || "AI invocation failed" });
+    } catch {
+      if (req.body.response_json_schema) {
+        return res.json({
+          status: "fallback",
+          message: "AI services are currently handling high traffic. Please retry in a moment.",
+        });
+      }
+      return res.send("Our AI travel guide service is currently handling high volume. Please retry in a moment.");
     }
+  });
+
+  // Dedicated AI Image & Visual Travel Journal Generator endpoint
+  app.post("/api/ai/generate-image", async (req: Request, res: Response) => {
+    const {
+      title = "Indian Heritage Site",
+      category = "Heritage Site",
+      state = "India",
+      prompt = "",
+      style = "photorealistic",
+    } = req.body;
+
+    const ai = getAI();
+    let generatedImageUrl = "";
+    let captionText = "";
+
+    // 1. Try generating with Gemini image model if AI client is available
+    if (ai) {
+      try {
+        const imagePrompt = `Authentic visual of ${title} in ${state}, India. Category: ${category}. ${
+          prompt ? `Notes: ${prompt}. ` : ""
+        }Artistic style: ${
+          style === "miniature"
+            ? "Traditional Rajasthani/Mughal miniature painting with intricate gold floral borders"
+            : style === "architectural"
+            ? "Detailed architectural blueprint and sepia lithograph sketch"
+            : "Photorealistic 8k golden hour photography, ancient stone textures, authentic cultural lighting"
+        }. Highly detailed, culturally respectful, no modern text or watermarks.`;
+
+        const imageRes: any = await ai.models.generateContent({
+          model: "gemini-3.1-flash-lite-image",
+          contents: {
+            parts: [{ text: imagePrompt }],
+          },
+        });
+
+        if (imageRes?.candidates?.[0]?.content?.parts) {
+          for (const part of imageRes.candidates[0].content.parts) {
+            if (part.inlineData && part.inlineData.data) {
+              generatedImageUrl = `data:${part.inlineData.mimeType || "image/png"};base64,${part.inlineData.data}`;
+              break;
+            }
+          }
+        }
+      } catch {
+        // Fall back gracefully to curated high-resolution cultural visual
+      }
+
+      // Generate a rich cultural caption using Gemini text model
+      try {
+        const captionRes = await generateWithFallback(ai, {
+          contents: `Write an evocative, authentic 2-sentence cultural travel journal caption for "${title}" (${category} from ${state}, India). Highlight its historic craftsmanship, architectural style, or artisan legacy. Avoid raw markdown stars or asterisks.`,
+          config: {
+            systemInstruction:
+              "You are the chief archivist for Bharat Yatra's living cultural journal. Write poetic, factual, and inspiring descriptions.",
+          },
+        });
+        captionText = (captionRes.text || "")
+          .replace(/\*\*(.*?)\*\*/g, "$1")
+          .replace(/\*(.*?)\*/g, "$1")
+          .trim();
+      } catch {
+        // Handled below
+      }
+    }
+
+    // 2. Curated visual library fallback if Gemini image is unavailable
+    const fallbackVisuals: Record<string, { image: string; caption: string; state: string }> = {
+      hampi: {
+        image: "https://images.unsplash.com/photo-1590050752117-238cb0fb12b1?w=1000&auto=format&fit=crop&q=80",
+        caption:
+          "Carved from granite blocks disguised as monolithic stone, this shrine dedicated to Garuda in Vittala Temple embodies the pinnacle of 16th-century Vijayanagara architectural genius.",
+        state: "Karnataka",
+      },
+      konark: {
+        image: "https://images.unsplash.com/photo-1606214174585-fe31582dc6ee?w=1000&auto=format&fit=crop&q=80",
+        caption:
+          "Conceived as a colossal stone chariot of Surya with 24 carved wheels that function as precise sundials calibrated to track cosmic solar cycles across the Bay of Bengal.",
+        state: "Odisha",
+      },
+      meenakshi: {
+        image: "https://images.unsplash.com/photo-1582510003544-4d00b7f74220?w=1000&auto=format&fit=crop&q=80",
+        caption:
+          "Towering 14 multi-tiered gopurams encrusted with thousands of stucco figures depicting celestial legends, rising above the ancient temple city along the sacred Vaigai river.",
+        state: "Tamil Nadu",
+      },
+      taj: {
+        image: "https://images.unsplash.com/photo-1564507592333-c60657eea523?w=1000&auto=format&fit=crop&q=80",
+        caption:
+          "A symphony in Makrana white marble inlaid with semi-precious lapis lazuli and carnelian using delicate Pietra Dura parchin kari artistry along the Yamuna terrace.",
+        state: "Uttar Pradesh",
+      },
+      jaipur: {
+        image: "https://images.unsplash.com/photo-1599661046289-e31897846e41?w=1000&auto=format&fit=crop&q=80",
+        caption:
+          "Perched atop the rugged Aravalli crest, the historic royal palaces showcase delicate Belgian mirror inlays, Persian water systems, and timeless Rajput craftsmanship.",
+        state: "Rajasthan",
+      },
+      madhubani: {
+        image: "https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=1000&auto=format&fit=crop&q=80",
+        caption:
+          "Centuries-old Mithila folk painting rendered using natural rice paste, turmeric, and indigo dyes, characterized by dense geometric line-work and sacred cosmic motifs.",
+        state: "Bihar",
+      },
+      pashmina: {
+        image: "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=1000&auto=format&fit=crop&q=80",
+        caption:
+          "Spun from raw 12-micron Changthangi mountain goat fleece and adorned with microscopic Sozni needlework that takes Kashmiri master artisans several months to complete.",
+        state: "Jammu & Kashmir",
+      },
+      "blue pottery": {
+        image: "https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=1000&auto=format&fit=crop&q=80",
+        caption:
+          "One of the few ceramic traditions created entirely without clay, using quartz stone powder glazed with vibrant Egyptian turquoise and copper oxide motifs.",
+        state: "Rajasthan",
+      },
+      bidriware: {
+        image: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1000&auto=format&fit=crop&q=80",
+        caption:
+          "Dramatic Damascene metalcraft where pure sterling silver wire is inlaid into blackened zinc alloy, oxidized using historic mineral soil from the 14th-century Bidar Fort.",
+        state: "Karnataka",
+      },
+      varanasi: {
+        image: "https://images.unsplash.com/photo-1561361513-2d000a50f0dc?w=1000&auto=format&fit=crop&q=80",
+        caption:
+          "A continuous sacred riverfront amphitheater along the holy Ganga where dawn Vedic chants, temple bells, and floating camphor lamps illuminate millennia of living spiritual heritage.",
+        state: "Uttar Pradesh",
+      },
+    };
+
+    const queryKey = (title + " " + prompt + " " + state).toLowerCase();
+    let matchedVisual: any = null;
+    for (const [key, item] of Object.entries(fallbackVisuals)) {
+      if (queryKey.includes(key)) {
+        matchedVisual = item;
+        break;
+      }
+    }
+
+    if (!matchedVisual) {
+      matchedVisual =
+        category === "Local Craft"
+          ? fallbackVisuals["madhubani"]
+          : fallbackVisuals["hampi"];
+    }
+
+    const finalImage = generatedImageUrl || matchedVisual.image;
+    const finalCaption = captionText || matchedVisual.caption;
+
+    return res.json({
+      success: true,
+      id: "jrn-" + Date.now() + "-" + Math.random().toString(36).substr(2, 6),
+      title: title || (category === "Local Craft" ? "Artisan Heritage Craft" : "Indian Heritage Monument"),
+      category: category || "Heritage Site",
+      state: state || matchedVisual.state,
+      imageUrl: finalImage,
+      caption: finalCaption,
+      style: style || "Photorealistic Heritage",
+      prompt: prompt || "",
+      isAiGenerated: Boolean(generatedImageUrl),
+      createdAt: new Date().toISOString(),
+    });
   });
 
   // Vite middleware in dev; static serving in production
