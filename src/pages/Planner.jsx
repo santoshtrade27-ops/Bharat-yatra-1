@@ -1285,7 +1285,7 @@ Return ${days} days with short title and descriptive heritage sights strictly in
 
             {/* Hotel Cards List */}
             <div className="space-y-3.5 max-h-[440px] overflow-y-auto pr-1">
-              {matchingHotels.map(h => {
+              {(matchingHotels || []).map(h => {
                 const isSelected = selectedHotel?.name === h.name;
                 return (
                   <div
@@ -1392,7 +1392,7 @@ Return ${days} days with short title and descriptive heritage sights strictly in
 
               {/* Day by Day Cards */}
               <div className="space-y-3 pt-2">
-                {plan.itinerary.map(d => (
+                {(plan?.itinerary || []).map(d => (
                   <div key={d.day} className="p-3.5 rounded-2xl bg-muted/40 border border-border flex gap-3.5">
                     <span className="w-8 h-8 rounded-full bg-primary text-primary-foreground grid place-items-center text-xs font-bold shrink-0">
                       Day {d.day}

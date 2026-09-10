@@ -27,12 +27,16 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    emptyOutDir: false,
-    chunkSizeWarningLimit: 3500,
+    emptyOutDir: true,
+    target: 'esnext',
+    chunkSizeWarningLimit: 2000,
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-icons': ['lucide-react'],
+          'vendor-charts': ['recharts'],
+          'vendor-firebase': ['firebase/app', 'firebase/auth', 'firebase/firestore'],
         },
       },
     },

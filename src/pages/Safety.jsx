@@ -574,7 +574,10 @@ export default function Safety() {
   const userLat = coords ? parseFloat(coords[0]) : 17.7089;
   const userLng = coords ? parseFloat(coords[1]) : 83.3039;
 
-  const filteredCenters = emergencyCenters
+  const safeCenters = Array.isArray(emergencyCenters) ? emergencyCenters : [];
+  const safeScams = Array.isArray(scamsList) ? scamsList : [];
+
+  const filteredCenters = safeCenters
     .filter(c => {
       if (selectedStateFilter === "All States") return true;
       return (c.city || "").toLowerCase().includes(selectedStateFilter.toLowerCase());
@@ -588,7 +591,7 @@ export default function Safety() {
       return 0;
     });
 
-  const filteredScams = scamsList.filter(s => {
+  const filteredScams = safeScams.filter(s => {
     if (selectedStateFilter === "All States") return true;
     return (s.state || "").toLowerCase().includes(selectedStateFilter.toLowerCase()) || 
            (s.city || "").toLowerCase().includes(selectedStateFilter.toLowerCase());
@@ -1331,7 +1334,7 @@ export default function Safety() {
                       </form>
 
                       {/* Recent Activities Timeline */}
-                      {registered?.liveLocation?.activities && (
+                      {Array.isArray(registered?.liveLocation?.activities) && registered.liveLocation.activities.length > 0 && (
                         <div className="space-y-1.5 pt-2 max-h-40 overflow-y-auto">
                           {registered.liveLocation.activities.map((act, idx) => (
                             <div key={idx} className="p-2 rounded-xl bg-muted/40 border border-border text-[11px] flex items-start gap-2">
