@@ -25,5 +25,17 @@ export default defineConfig({
       overlay: false,
     },
   },
+  build: {
+    outDir: 'dist',
+    emptyOutDir: false,
+    chunkSizeWarningLimit: 3500,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+        },
+      },
+    },
+  },
 });
 
