@@ -62,7 +62,7 @@ export default function Heritage() {
           const parsed = JSON.parse(saved);
           if (Array.isArray(parsed) && parsed.length > 0) {
             parsed.forEach((p) => {
-              const idx = coreList.findIndex(x => x.id === p.id || x.name.toLowerCase() === p.name.toLowerCase());
+              const idx = coreList.findIndex(x => x.id === p.id || (p.name && x.name.toLowerCase() === p.name.toLowerCase()));
               const formatted = {
                 id: p.id,
                 name: p.name,
@@ -91,7 +91,22 @@ export default function Heritage() {
           }
         }
       } catch {}
-      setAllSites(coreList);
+
+      // Ensure strict uniqueness by id and normalized name
+      const uniqueMap = new Map();
+      coreList.forEach(item => {
+        const idKey = item.id ? `id-${item.id}` : null;
+        const nameKey = item.name ? `name-${item.name.toLowerCase().trim()}` : null;
+        const primaryKey = idKey || nameKey || `rand-${Math.random()}`;
+        
+        if (!uniqueMap.has(primaryKey) && (!nameKey || !uniqueMap.has(nameKey))) {
+          uniqueMap.set(primaryKey, item);
+          if (nameKey) uniqueMap.set(nameKey, item);
+        }
+      });
+      // Filter out duplicate object references from the map values
+      const uniqueSites = Array.from(new Set(uniqueMap.values()));
+      setAllSites(uniqueSites);
     };
 
     loadPlaces();
@@ -220,9 +235,9 @@ export default function Heritage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredSites.map((s) => (
+            {filteredSites.map((s, idx) => (
               <div 
-                key={s.id} 
+                key={`${s.id || 'site'}-${idx}`} 
                 onClick={() => setActiveModalSite(s)}
                 className="cursor-pointer transition-transform hover:-translate-y-1"
               >

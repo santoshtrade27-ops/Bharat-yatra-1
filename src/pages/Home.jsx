@@ -63,7 +63,16 @@ const groupOverviews = {
 };
 
 export default function Home() {
-  const [media, setMedia] = useState("photo");
+  const [media, setMedia] = useState(() => {
+    try {
+      const hasVisited = sessionStorage.getItem("by-visited-home");
+      if (!hasVisited) {
+        sessionStorage.setItem("by-visited-home", "true");
+        return "video";
+      }
+    } catch {}
+    return "photo";
+  });
   const [heroVideo, setHeroVideo] = useState("p8mXAQ6cPxg");
   const [heroVideoUrl, setHeroVideoUrl] = useState(
     "https://media.base44.com/videos/public/6a9bae9fd15b41c75cea5237/4135fd9b0_vidssavecomIncredibleIndia4K-BeyondtheStereotypes_TheRealIndiaRevealed720P.mp4"
@@ -171,42 +180,23 @@ export default function Home() {
   return (
     <div>
       {/* Hero */}
-      <section className="relative h-[88vh] min-h-[560px] flex items-center justify-center text-center overflow-hidden">
-        <Image
-          src={currentHeroImage}
-          alt="Red Fort, Delhi"
-          className="absolute inset-0 w-full h-full"
-          fittingType="fill"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-stone-900/70 via-stone-900/55 to-stone-900/80" />
-
-        <div className="absolute top-5 right-4 z-20 flex items-center gap-1 p-1 rounded-full bg-stone-900/80 backdrop-blur-md border border-stone-800 text-stone-200 text-xs font-medium shadow-lg">
-          <button
-            onClick={() => setMedia("photo")}
-            className={`flex items-center gap-1 px-3 py-1.5 rounded-full transition-all ${
-              media === "photo" ? "bg-amber-500 text-stone-900 font-bold shadow-md" : "hover:text-amber-400"
-            }`}
-          >
-            <Camera className="w-3.5 h-3.5" /> Photo
-          </button>
-          <button
-            onClick={() => setMedia("video")}
-            className={`flex items-center gap-1 px-3 py-1.5 rounded-full transition-all ${
-              media === "video" ? "bg-amber-500 text-stone-900 font-bold shadow-md" : "hover:text-amber-400"
-            }`}
-          >
-            <Video className="w-3.5 h-3.5" /> Video
-          </button>
-        </div>
-
-        {media === "video" && (
-          <div className="absolute inset-0 z-[1] overflow-hidden bg-black">
+      <section className="relative h-[82vh] sm:h-[88vh] min-h-[520px] sm:min-h-[580px] flex items-center justify-center text-center overflow-hidden bg-stone-950">
+        {/* Background Media */}
+        {media === "photo" ? (
+          <Image
+            src={currentHeroImage}
+            alt="Red Fort, Delhi"
+            className="absolute inset-0 w-full h-full object-cover"
+            fittingType="fill"
+          />
+        ) : (
+          <div className="absolute inset-0 z-0 overflow-hidden bg-stone-950">
             {heroVideoUrl ? (
               <HeroVideo src={heroVideoUrl} />
             ) : (
               <iframe
-                className="w-full h-full"
-                src={`https://www.youtube.com/embed/${heroVideo}?autoplay=1&mute=1&controls=1&modestbranding=1&playsinline=1&rel=0`}
+                className="w-full h-full pointer-events-none scale-125"
+                src={`https://www.youtube.com/embed/${heroVideo}?autoplay=1&mute=1&controls=0&modestbranding=1&playsinline=1&rel=0&loop=1&playlist=${heroVideo}`}
                 title="Heritage India"
                 allow="autoplay; encrypted-media; fullscreen"
                 frameBorder="0"
@@ -215,28 +205,52 @@ export default function Home() {
           </div>
         )}
 
+        {/* Readability Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-stone-950/70 via-stone-950/50 to-stone-950/85 pointer-events-none z-[2]" />
+
+        {/* Top Media Mode Toggle (Photo / Video) */}
+        <div className="absolute top-4 right-4 z-20 flex items-center gap-1 p-1 rounded-full bg-stone-900/80 backdrop-blur-md border border-stone-700/60 text-stone-200 text-xs font-medium shadow-xl">
+          <button
+            onClick={() => setMedia("photo")}
+            className={`flex items-center gap-1 px-3 py-1.5 rounded-full transition-all ${
+              media === "photo" ? "bg-amber-500 text-stone-950 font-bold shadow-md" : "hover:text-amber-400 text-stone-300"
+            }`}
+          >
+            <Camera className="w-3.5 h-3.5" /> Photo
+          </button>
+          <button
+            onClick={() => setMedia("video")}
+            className={`flex items-center gap-1 px-3 py-1.5 rounded-full transition-all ${
+              media === "video" ? "bg-amber-500 text-stone-950 font-bold shadow-md" : "hover:text-amber-400 text-stone-300"
+            }`}
+          >
+            <Video className="w-3.5 h-3.5" /> Video
+          </button>
+        </div>
+
+        {/* Main Hero Content — Shown when in Photo mode */}
         {media === "photo" && (
-          <div className="relative z-10 max-w-3xl px-4 sm:px-6">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-stone-900/70 text-stone-200 text-xs font-medium mb-4 sm:mb-6">
+          <div className="relative z-10 max-w-3xl px-4 sm:px-6 my-auto pt-4 pb-10">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-stone-900/80 text-stone-200 text-xs font-medium mb-3 sm:mb-5 border border-white/10 backdrop-blur-md shadow-md">
               <MapPin className="w-3.5 h-3.5 text-amber-400" /> Red Fort, Delhi
             </span>
-            <h1 className="text-3xl sm:text-6xl font-bold text-white leading-tight tracking-tight font-heading">
+            <h1 className="text-2xl sm:text-5xl md:text-6xl font-bold text-white leading-tight tracking-tight font-heading drop-shadow-md">
               {t("hero_title_1")}{" "}
               <span className="text-amber-400">{t("hero_title_2")}</span>
             </h1>
-            <p className="mt-4 sm:mt-5 text-sm sm:text-lg text-stone-200 max-w-xl mx-auto">
+            <p className="mt-3 sm:mt-5 text-xs sm:text-base md:text-lg text-stone-200 max-w-xl mx-auto leading-relaxed drop-shadow">
               {t("hero_sub")}
             </p>
-            <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <div className="mt-5 sm:mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 max-w-xs sm:max-w-none mx-auto">
               <Link
                 to="/planner"
-                className="inline-flex items-center gap-2 px-7 py-3 rounded-full bg-amber-500 text-stone-900 font-semibold text-sm hover:bg-amber-400 transition-colors shadow-lg"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3 rounded-full bg-amber-500 text-stone-950 font-semibold text-sm hover:bg-amber-400 active:scale-95 transition-all shadow-lg"
               >
                 Plan my trip <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
                 to="/heritage"
-                className="inline-flex items-center gap-2 px-7 py-3 rounded-full border border-white/40 text-white font-semibold text-sm hover:bg-white/10 transition-colors"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3 rounded-full border border-white/40 text-white font-semibold text-sm hover:bg-white/10 active:scale-95 transition-all backdrop-blur-sm"
               >
                 Explore sites
               </Link>
@@ -244,10 +258,11 @@ export default function Home() {
           </div>
         )}
 
+        {/* Floating Map Link — Shown when in Photo mode */}
         {media === "photo" && (
           <Link
             to="/heritage"
-            className="absolute bottom-6 right-5 z-10 w-12 h-12 grid place-items-center rounded-full bg-amber-500 text-stone-900 shadow-lg hover:bg-amber-400 transition-colors"
+            className="absolute bottom-4 sm:bottom-6 right-4 sm:right-5 z-20 w-11 h-11 sm:w-12 sm:h-12 grid place-items-center rounded-full bg-amber-500 text-stone-950 shadow-xl hover:bg-amber-400 active:scale-95 transition-all"
             aria-label="Open map"
           >
             <MapIcon className="w-5 h-5" />
@@ -261,8 +276,8 @@ export default function Home() {
         title={t("section_heritage_sub")}
       >
         <div className="flex gap-4 sm:gap-5 overflow-x-auto pb-4 snap-x scrollbar-none -mx-1 px-1">
-          {sites.map((s) => (
-            <div key={s.id} className="min-w-[260px] max-w-[260px] snap-start shrink-0">
+          {sites.map((s, idx) => (
+            <div key={`${s.id || 'site'}-${idx}`} className="min-w-[260px] max-w-[260px] snap-start shrink-0">
               <HeritageCard site={s} />
             </div>
           ))}

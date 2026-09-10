@@ -33,77 +33,58 @@ import Translator from '@/pages/Translator';
 import Profile from '@/pages/Profile';
 import Admin from '@/pages/Admin';
 
-const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
-
-  // Show loading spinner while checking app public settings or auth
-  if (isLoadingPublicSettings || isLoadingAuth) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
-      </div>
-    );
-  }
-
-  // Handle authentication errors
-  if (authError) {
-    if (authError.type === 'user_not_registered') {
-      return <UserNotRegisteredError />;
-    } else if (authError.type === 'auth_required') {
-      // Redirect to login automatically
-      navigateToLogin();
-      return null;
-    }
-  }
-
-  // Render the main app
+const MainAppRoutes = () => {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
-      <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
-        <Route element={<ErrorBoundary><Layout /></ErrorBoundary>}>
-          <Route path="/" element={<Home />} />
-          <Route path="/heritage" element={<Heritage />} />
-          <Route path="/planner" element={<Planner />} />
-          <Route path="/shop" element={<Shop />} />
-          <Route path="/map" element={<MapPage />} />
-          <Route path="/events" element={<Events />} />
-          <Route path="/stories" element={<Stories />} />
-          <Route path="/guides" element={<Guides />} />
-          <Route path="/safety" element={<Safety />} />
-          <Route path="/event-planner" element={<EventPlanner />} />
-          <Route path="/surprise-planner" element={<SurprisePlanner />} />
-          <Route path="/translate" element={<Translator />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/admin" element={<Admin />} />
-        </Route>
+      
+      <Route element={<ErrorBoundary><Layout /></ErrorBoundary>}>
+        <Route path="/" element={<Home />} />
+        <Route path="/heritage" element={<Heritage />} />
+        <Route path="/planner" element={<Planner />} />
+        <Route path="/shop" element={<Shop />} />
+        <Route path="/map" element={<MapPage />} />
+        <Route path="/events" element={<Events />} />
+        <Route path="/stories" element={<Stories />} />
+        <Route path="/guides" element={<Guides />} />
+        <Route path="/safety" element={<Safety />} />
+        <Route path="/event-planner" element={<EventPlanner />} />
+        <Route path="/surprise-planner" element={<SurprisePlanner />} />
+        <Route path="/translate" element={<Translator />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute unauthenticatedElement={<Navigate to="/login?returnTo=/admin" replace />}>
+              <Admin />
+            </ProtectedRoute>
+          }
+        />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
 };
 
-
 function App() {
-
   return (
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>
         <ThemeProvider>
           <I18nProvider>
-            <Router>
+            <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
               <ScrollToTop />
-              <AuthenticatedApp />
+              <MainAppRoutes />
             </Router>
             <Toaster />
           </I18nProvider>
         </ThemeProvider>
       </QueryClientProvider>
     </AuthProvider>
-  )
+  );
 }
 
 export default App

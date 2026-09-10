@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { auth, db, googleProvider, signInWithPopup, fbSignOut } from '@/components/lib/firebase';
-import { onAuthStateChanged, signInWithEmailAndPassword } from 'firebase/auth';
+import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 // System credential directory & credentials
@@ -146,7 +146,7 @@ export const AuthProvider = ({ children }) => {
   const resolveRoleForEmail = (email) => {
     if (!email) return "tourist";
     const cleanEmail = email.toLowerCase().trim();
-    if (cleanEmail === "santoshtrade27@gmail.com" || cleanEmail.includes("admin")) {
+    if (cleanEmail === "santoshtrade27@gmail.com") {
       return "admin";
     }
     const matched = getSystemCredentials().find(c => c.email.toLowerCase() === cleanEmail);
@@ -190,80 +190,80 @@ export const AuthProvider = ({ children }) => {
       } catch {}
 
       // 2. Listen to Firebase Auth state
-      const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
-        if (fbUser) {
-          try {
-            const role = resolveRoleForEmail(fbUser.email);
-            const designatedDashboard = resolveDashboardForRole(role);
-            const userData = {
-              id: fbUser.uid,
-              uid: fbUser.uid,
-              email: fbUser.email,
-              full_name: fbUser.displayName || fbUser.email?.split('@')[0] || "Explorer",
-              displayName: fbUser.displayName || fbUser.email?.split('@')[0] || "Explorer",
-              photoURL: fbUser.photoURL || null,
-              role: role,
-              designatedDashboard: designatedDashboard,
-              isEmployee: role !== "tourist",
-              isAdmin: role === "admin" || fbUser.email === "santoshtrade27@gmail.com",
-            };
-
-            // Sync with Firestore if possible
+      let resolved = false;
+      const unsubscribe = onAuthStateChanged(
+        auth,
+        async (fbUser) => {
+          resolved = true;
+          if (fbUser) {
             try {
-              const userRef = doc(db, "users", fbUser.uid);
-              const userSnap = await getDoc(userRef);
-              if (!userSnap.exists()) {
-                await setDoc(userRef, {
-                  email: fbUser.email,
-                  displayName: userData.full_name,
-                  role: role,
-                  createdAt: serverTimestamp(),
-                  updatedAt: serverTimestamp(),
-                }, { merge: true });
+              const role = resolveRoleForEmail(fbUser.email);
+              const designatedDashboard = resolveDashboardForRole(role);
+              const userData = {
+                id: fbUser.uid,
+                uid: fbUser.uid,
+                email: fbUser.email,
+                full_name: fbUser.displayName || fbUser.email?.split('@')[0] || "Explorer",
+                displayName: fbUser.displayName || fbUser.email?.split('@')[0] || "Explorer",
+                photoURL: fbUser.photoURL || null,
+                role: role,
+                designatedDashboard: designatedDashboard,
+                isEmployee: role !== "tourist",
+                isAdmin: role === "admin" || fbUser.email === "santoshtrade27@gmail.com",
+              };
+
+              // Sync with Firestore if possible
+              try {
+                const userRef = doc(db, "users", fbUser.uid);
+                const userSnap = await getDoc(userRef);
+                if (!userSnap.exists()) {
+                  await setDoc(userRef, {
+                    email: fbUser.email,
+                    displayName: userData.full_name,
+                    role: role,
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp(),
+                  }, { merge: true });
+                }
+              } catch (err) {
+                console.warn("Firestore user sync note:", err);
               }
-            } catch (err) {
-              console.warn("Firestore user sync note:", err);
-            }
 
-            setUser(userData);
-            setIsAuthenticated(true);
-            try {
-              localStorage.setItem("by_current_user", JSON.stringify(userData));
-            } catch {}
-          } catch (e) {
-            console.error("Auth user state error:", e);
-          }
-        } else {
-          // If no Firebase user and no manual stored user, default to demo logged-in Super Admin for seamless testing
-          const isExplicitlyLoggedOut = typeof window !== 'undefined' && localStorage.getItem('by_logged_out') === 'true';
-          if (!isExplicitlyLoggedOut) {
-            // Default active operator is Super Admin Santosh Trade
-            const defaultAdmin = {
-              id: "usr_santosh_admin",
-              uid: "usr_santosh_admin",
-              email: "santoshtrade27@gmail.com",
-              full_name: "Santosh Trade (Super Admin)",
-              displayName: "Santosh Trade",
-              role: "admin",
-              designatedDashboard: "core_admin",
-              isEmployee: true,
-              isAdmin: true,
-            };
-            setUser(defaultAdmin);
-            setIsAuthenticated(true);
-            try {
-              localStorage.setItem("by_current_user", JSON.stringify(defaultAdmin));
-            } catch {}
+              setUser(userData);
+              setIsAuthenticated(true);
+              try {
+                localStorage.setItem("by_current_user", JSON.stringify(userData));
+              } catch {}
+            } catch (e) {
+              console.error("Auth user state error:", e);
+            }
           } else {
+            // Unauthenticated user state
             setUser(null);
             setIsAuthenticated(false);
           }
+          setIsLoadingAuth(false);
+          setAuthChecked(true);
+        },
+        (err) => {
+          console.warn("Auth state error fallback:", err);
+          setIsLoadingAuth(false);
+          setAuthChecked(true);
         }
-        setIsLoadingAuth(false);
-        setAuthChecked(true);
-      });
+      );
 
-      return () => unsubscribe();
+      // Safe fallback timeout (max 400ms)
+      const timer = setTimeout(() => {
+        if (!resolved) {
+          setIsLoadingAuth(false);
+          setAuthChecked(true);
+        }
+      }, 400);
+
+      return () => {
+        if (typeof unsubscribe === "function") unsubscribe();
+        clearTimeout(timer);
+      };
     };
 
     checkLocalOrFirebase();
@@ -387,16 +387,17 @@ export const AuthProvider = ({ children }) => {
       return userData;
     } catch (err) {
       console.warn("Google popup error, falling back:", err);
-      // Fallback Google User
+      // Fallback Google Tourist User
       const defaultGoogleUser = {
-        id: "google_user_demo",
-        uid: "google_user_demo",
-        email: "santoshtrade27@gmail.com",
-        full_name: "Santosh Trade (Super Admin)",
-        role: "admin",
-        designatedDashboard: "core_admin",
-        isEmployee: true,
-        isAdmin: true,
+        id: "google_tourist_demo",
+        uid: "google_tourist_demo",
+        email: "yatri.google@bharatyatra.in",
+        full_name: "Google Yatri Explorer",
+        displayName: "Google Yatri",
+        role: "tourist",
+        designatedDashboard: "none",
+        isEmployee: false,
+        isAdmin: false,
       };
       setUser(defaultGoogleUser);
       setIsAuthenticated(true);
@@ -406,6 +407,59 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem("by_logged_out");
       } catch {}
       return defaultGoogleUser;
+    }
+  };
+
+  // Register via Firebase Email/Password with Verification Email
+  const registerWithFirebase = async (email, password, fullName = '') => {
+    setIsLoadingAuth(true);
+    const cleanEmail = (email || '').toLowerCase().trim();
+    try {
+      // 1. Create real user in Firebase Auth
+      const userCred = await createUserWithEmailAndPassword(auth, cleanEmail, password);
+      const fbUser = userCred.user;
+
+      // 2. Send actual verification email via Firebase
+      try {
+        await sendEmailVerification(fbUser);
+      } catch (e) {
+        console.warn("Verification email send note:", e);
+      }
+
+      const role = resolveRoleForEmail(cleanEmail);
+      const userData = {
+        id: fbUser.uid,
+        uid: fbUser.uid,
+        email: fbUser.email,
+        full_name: fullName || fbUser.email?.split('@')[0],
+        displayName: fullName || fbUser.email?.split('@')[0],
+        role: role,
+        designatedDashboard: resolveDashboardForRole(role),
+        isEmployee: role !== 'tourist',
+        isAdmin: role === 'admin' || cleanEmail === 'santoshtrade27@gmail.com',
+      };
+
+      // 3. Save profile in Firestore
+      try {
+        await setDoc(doc(db, 'users', fbUser.uid), {
+          ...userData,
+          createdAt: serverTimestamp(),
+        }, { merge: true });
+      } catch (e) {
+        console.warn('Firestore user doc write note:', e);
+      }
+
+      setUser(userData);
+      setIsAuthenticated(true);
+      setIsLoadingAuth(false);
+      try {
+        localStorage.setItem('by_current_user', JSON.stringify(userData));
+        localStorage.removeItem('by_logged_out');
+      } catch {}
+      return userData;
+    } catch (err) {
+      setIsLoadingAuth(false);
+      throw err;
     }
   };
 
@@ -469,6 +523,7 @@ export const AuthProvider = ({ children }) => {
         authChecked,
         appPublicSettings,
         loginWithEmailPassword,
+        registerWithFirebase,
         loginWithGoogle,
         quickSwitchRole,
         logout,

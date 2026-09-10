@@ -41,8 +41,12 @@ export default function Login() {
   const handleGoogle = async () => {
     setLoading(true);
     try {
-      await loginWithGoogle();
-      navigate(returnTo !== "/login" ? returnTo : "/admin");
+      const loggedUser = await loginWithGoogle();
+      if (loggedUser?.role === "tourist") {
+        navigate(returnTo !== "/login" && returnTo !== "/admin" && returnTo !== "/" ? returnTo : "/profile");
+      } else {
+        navigate(returnTo !== "/login" && returnTo !== "/" ? returnTo : "/admin");
+      }
     } catch (err) {
       setError(err.message || "Google login failed");
     } finally {

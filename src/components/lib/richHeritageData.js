@@ -121,7 +121,7 @@ export const enrichedHeritageSites = [
     safetyTips: "Stay hydrated. Avoid climbing unlit parapet walls after sunset. Secure personal belongings in crowded bazaars nearby."
   },
   {
-    id: "charminar-laad-bazaar",
+    id: "charminar",
     name: "Charminar & Historic Laad Bazaar",
     state: "Telangana",
     district: "Hyderabad",
@@ -378,34 +378,6 @@ export const enrichedHeritageSites = [
   },
 
   // --- 5. EXPANDED TELANGANA SITES ---
-  {
-    id: "charminar",
-    name: "Charminar & Historic Laad Bazaar",
-    state: "Telangana",
-    district: "Hyderabad",
-    city: "Hyderabad",
-    tag: "monument",
-    image: "https://images.unsplash.com/photo-1572455044327-7348c1be7267?w=800&auto=format&fit=crop&q=80",
-    description: "The global icon of Hyderabad built in 1591 CE featuring four grand 48.7-meter minarets, a 400-year-old upper mosque, and glittering lacquer bangle bazaars.",
-    historicalNarrative: "Commissioned by Muhammad Quli Qutb Shah in 1591 to commemorate the eradication of a devastating plague and mark the intersection of royal trade corridors.",
-    hiddenAspect: "An ancient underground royal escape tunnel is believed to connect Charminar directly to Golconda Fort 8km away.",
-    timings: "09:30 AM - 05:30 PM (Daily)",
-    crowdDensity: "Very High in evenings and around Eid/Diwali",
-    dressCode: "Modest attire recommended; remove footwear when ascending to upper mosque level",
-    rating: 4.8,
-    reviewsCount: 45000,
-    reviews: [
-      { user: "Farhan A.", rating: 5, comment: "Heart and soul of Hyderabad! Irani chai at Nimrah Cafe right opposite Charminar is legendary." }
-    ],
-    address: "Charminar Rd, Char Kaman, Ghansi Bazaar, Hyderabad, Telangana 500002",
-    lat: 17.3616,
-    lng: 78.4747,
-    wiki: "https://en.wikipedia.org/wiki/Charminar",
-    youtube: "https://www.youtube.com/results?search_query=charminar+hyderabad+history",
-    mapsUrl: "https://maps.google.com/?q=Charminar+Hyderabad",
-    frequentScams: "Fake pearls and glass bangles sold as authentic Basra pearls. Buy certified pearls from registered showrooms like Mangatrai or Jagdamba.",
-    safetyTips: "Keep wallets and phones secure in crowded market lanes."
-  },
   {
     id: "thousand-pillar-temple",
     name: "Warangal Thousand Pillar Temple (Rudreswara)",

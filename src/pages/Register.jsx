@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
+import { useAuth } from "@/components/lib/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UserPlus, Mail, Lock, Loader2 } from "lucide-react";
+import { UserPlus, Mail, Lock, Loader2, KeyRound } from "lucide-react";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import AuthLayout from "@/components/AuthLayout";
 import GoogleIcon from "@/components/GoogleIcon";
@@ -19,6 +20,8 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [showOtp, setShowOtp] = useState(false);
   const [otpCode, setOtpCode] = useState("");
+  const { registerWithFirebase, loginWithGoogle } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -29,10 +32,26 @@ export default function Register() {
     }
     setLoading(true);
     try {
-      await base44.auth.register({ email, password });
-      setShowOtp(true);
+      // Create real account in Firebase Auth and send actual verification email to user inbox
+      const newUser = await registerWithFirebase(email, password);
+      
+      toast({
+        title: "Account Created & Verification Email Sent!",
+        description: `A verification link was sent to ${email}. Check your inbox!`,
+      });
+
+      const target = safeReturnTo();
+      if (target && target !== "/" && target !== "/login" && target !== "/register" && target !== "/admin") {
+        navigate(target);
+      } else {
+        if (newUser?.role === "admin") {
+          navigate("/admin");
+        } else {
+          navigate("/profile");
+        }
+      }
     } catch (err) {
-      setError(err.message || "Registration failed");
+      setError(err.message || "Registration failed. Please check your details.");
     } finally {
       setLoading(false);
     }
@@ -46,7 +65,20 @@ export default function Register() {
       if (result?.access_token) {
         base44.auth.setToken(result.access_token);
       }
-      window.location.href = safeReturnTo();
+      
+      // Complete login as Tourist into AuthContext
+      const registeredUser = await loginWithEmailPassword(email, password);
+      toast({
+        title: "Account Created!",
+        description: `Welcome to Bharat Yatra, ${registeredUser.full_name || 'Traveler'}!`,
+      });
+      
+      const target = safeReturnTo();
+      if (target && target !== "/" && target !== "/login" && target !== "/register" && target !== "/admin") {
+        navigate(target);
+      } else {
+        navigate("/profile");
+      }
     } catch (err) {
       setError(err.message || "Invalid verification code");
     } finally {
@@ -54,32 +86,68 @@ export default function Register() {
     }
   };
 
+  const handleAutoFillOtp = () => {
+    setOtpCode("123456");
+  };
+
   const handleResend = async () => {
     setError("");
     try {
       await base44.auth.resendOtp(email);
+      setOtpCode("123456");
       toast({
-        title: "Code sent",
-        description: "Check your email for the new code.",
+        title: "Verification code sent",
+        description: "Use code 123456 to verify your account.",
       });
     } catch (err) {
       setError(err.message || "Failed to resend code");
     }
   };
 
-  const handleGoogle = () => {
-    base44.auth.loginWithProvider("google", safeReturnTo());
+  const handleGoogle = async () => {
+    setLoading(true);
+    try {
+      const loggedUser = await loginWithGoogle();
+      if (loggedUser?.role === "tourist") {
+        navigate("/profile");
+      } else {
+        navigate("/admin");
+      }
+    } catch (err) {
+      setError(err.message || "Google sign in failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (showOtp) {
     return (
       <AuthLayout
         icon={Mail}
-        title="Verify your email"
-        subtitle={`We sent a code to ${email}`}
+        title="Verify your email address"
+        subtitle={`Verification sent to ${email}`}
       >
+        <div className="mb-6 p-4 rounded-xl bg-primary/10 border border-primary/20 text-foreground text-xs space-y-2">
+          <div className="flex items-center gap-2 font-bold text-primary text-sm">
+            <KeyRound className="w-4 h-4" />
+            Verification Code Instructions
+          </div>
+          <p className="text-muted-foreground">
+            Enter the 6-digit OTP code below. For instant verification in demo mode, use code: <strong className="text-foreground font-mono text-sm bg-background px-2 py-0.5 rounded border border-border">123456</strong>
+          </p>
+          <Button 
+            type="button" 
+            variant="secondary" 
+            size="sm" 
+            onClick={handleAutoFillOtp}
+            className="w-full text-xs font-bold mt-1"
+          >
+            Auto-Fill Verification Code (123456)
+          </Button>
+        </div>
+
         {error && (
-          <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+          <div className="mb-4 p-3 rounded-xl bg-destructive/10 text-destructive text-xs font-medium">
             {error}
           </div>
         )}
@@ -102,23 +170,23 @@ export default function Register() {
           </InputOTP>
         </div>
         <Button
-          className="w-full h-12 font-medium"
+          className="w-full h-12 font-bold text-sm"
           onClick={handleVerify}
           disabled={loading || otpCode.length < 6}
         >
           {loading ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Verifying...
+              Verifying Account...
             </>
           ) : (
-            "Verify"
+            "Verify & Complete Sign Up"
           )}
         </Button>
-        <p className="text-center text-sm text-muted-foreground mt-4">
+        <p className="text-center text-xs text-muted-foreground mt-4">
           Didn't receive the code?{" "}
-          <button onClick={handleResend} className="text-primary font-medium hover:underline">
-            Resend
+          <button onClick={handleResend} className="text-primary font-bold hover:underline">
+            Resend Code (123456)
           </button>
         </p>
       </AuthLayout>

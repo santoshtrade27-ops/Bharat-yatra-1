@@ -160,6 +160,22 @@ export default function StateGallery({ limit }) {
   const [activeRegion, setActiveRegion] = useState("All Regions");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        setSelectedImage(null);
+      }
+    };
+    if (selectedImage) {
+      window.addEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "hidden";
+    }
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "auto";
+    };
+  }, [selectedImage]);
   const [items, setItems] = useState(() => {
     const cached = localStorage.getItem("by-states-directory") || localStorage.getItem("by-admin-entity-states");
     if (cached) {
@@ -354,14 +370,14 @@ export default function StateGallery({ limit }) {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Image View */}
-            <div className="relative h-72 md:h-full bg-black flex items-center justify-center">
+            <div className="relative min-h-[280px] max-h-[420px] md:max-h-full bg-stone-950 flex items-center justify-center overflow-hidden">
               <Image
                 src={selectedImage.image}
                 alt={selectedImage.state}
-                className="w-full h-full object-cover"
-                fittingType="fill"
+                className="w-full h-full object-contain max-h-[400px] p-2 bg-stone-950"
+                fittingType="fit"
               />
-              <span className="absolute top-4 left-4 px-3 py-1 rounded-full bg-black/70 border border-amber-500/40 text-amber-400 text-xs font-bold backdrop-blur-md">
+              <span className="absolute top-4 left-4 px-3 py-1 rounded-full bg-black/80 border border-amber-500/40 text-amber-400 text-xs font-bold backdrop-blur-md">
                 {selectedImage.state}
               </span>
             </div>
@@ -375,9 +391,11 @@ export default function StateGallery({ limit }) {
                   </span>
                   <button
                     onClick={() => setSelectedImage(null)}
-                    className="w-8 h-8 rounded-full bg-stone-800 hover:bg-stone-700 text-stone-300 grid place-items-center transition-colors"
+                    className="px-3 py-1.5 rounded-full bg-red-600 hover:bg-red-700 text-white font-bold text-xs flex items-center gap-1 shadow-lg transition-all"
+                    title="Close (Esc)"
                   >
-                    <X className="w-4 h-4" />
+                    <X className="w-4 h-4 stroke-[3]" />
+                    <span>Close</span>
                   </button>
                 </div>
 
