@@ -96,7 +96,7 @@ export default function Home() {
           }
         }
       } catch {}
-      setSites(heritageSites);
+      setSites(Array.isArray(heritageSites) ? heritageSites : []);
     };
 
     const loadFoods = () => {
@@ -110,7 +110,7 @@ export default function Home() {
           }
         }
       } catch {}
-      setFoods(staticFoods);
+      setFoods(Array.isArray(staticFoods) ? staticFoods : []);
     };
 
     const loadProducts = () => {
@@ -124,7 +124,7 @@ export default function Home() {
           }
         }
       } catch {}
-      setProducts(staticProducts);
+      setProducts(Array.isArray(staticProducts) ? staticProducts : []);
     };
 
     loadPlaces();
@@ -133,7 +133,7 @@ export default function Home() {
 
     // Fetch from base44 backend if available and has items
     base44.entities.Place.list("-created_date", 20).then((list) => {
-      if (list && list.length) {
+      if (Array.isArray(list) && list.length) {
         const formatted = list.map((p) => ({
           id: p.id, name: p.name, state: p.state, tag: p.tag,
           image: p.image, description: p.description, wiki: p.wiki, youtube: p.youtube,
@@ -144,14 +144,14 @@ export default function Home() {
     }).catch(() => {});
 
     base44.entities.Food.list("-created_date", 20).then((list) => {
-      if (list && list.length) {
+      if (Array.isArray(list) && list.length) {
         setFoods(list);
         localStorage.setItem("by-admin-entity-foods", JSON.stringify(list));
       }
     }).catch(() => {});
 
     base44.entities.Product.list("-created_date", 20).then((list) => {
-      if (list && list.length) {
+      if (Array.isArray(list) && list.length) {
         setProducts(list);
         localStorage.setItem("by-admin-entity-products", JSON.stringify(list));
         localStorage.setItem("by-artisan-products", JSON.stringify(list));
@@ -251,7 +251,7 @@ export default function Home() {
         title={t("section_heritage_sub")}
       >
         <div className="flex gap-4 sm:gap-5 overflow-x-auto pb-4 snap-x scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0 touch-scroll">
-          {sites.map((s) => (
+          {(Array.isArray(sites) ? sites : []).map((s) => (
             <div key={s.id} className="min-w-[270px] max-w-[270px] sm:min-w-[280px] snap-start shrink-0">
               <HeritageCard site={s} />
             </div>
@@ -269,7 +269,7 @@ export default function Home() {
       {/* Food */}
       <Section eyebrow={t("section_foods")} title={t("section_foods_sub")}>
         <div className="flex gap-4 sm:gap-5 overflow-x-auto pb-4 snap-x scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0 touch-scroll">
-          {foods.map((f) => (
+          {(Array.isArray(foods) ? foods : []).map((f) => (
             <div key={f.name} className="min-w-[250px] max-w-[250px] snap-start shrink-0">
               <FoodCard food={f} />
             </div>
@@ -283,7 +283,7 @@ export default function Home() {
         title={t("section_crafts_sub")}
       >
         <div className="flex gap-4 sm:gap-5 overflow-x-auto pb-4 snap-x scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0 touch-scroll">
-          {products.slice(0, 6).map((p, idx) => (
+          {(Array.isArray(products) ? products : []).slice(0, 6).map((p, idx) => (
             <div key={p.id || p.name || p.title || idx} className="min-w-[250px] max-w-[250px] snap-start shrink-0">
               <ProductCard product={p} />
             </div>

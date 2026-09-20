@@ -136,7 +136,10 @@ function RegistrationsModule() {
   const [safetyRegs, setSafetyRegs] = useState(() => {
     try {
       const s = localStorage.getItem("by-safety-registrations");
-      if (s) return JSON.parse(s);
+      if (s) {
+        const parsed = JSON.parse(s);
+        if (Array.isArray(parsed)) return parsed;
+      }
       const single = localStorage.getItem("by-trip-reg");
       if (single) {
         const parsed = JSON.parse(single);
@@ -153,7 +156,10 @@ function RegistrationsModule() {
   const [elderRegs, setElderRegs] = useState(() => {
     try {
       const s = localStorage.getItem("by-elder-registrations");
-      if (s) return JSON.parse(s);
+      if (s) {
+        const parsed = JSON.parse(s);
+        if (Array.isArray(parsed)) return parsed;
+      }
       const single = localStorage.getItem("by-elder");
       if (single) {
         const parsed = JSON.parse(single);
@@ -170,7 +176,10 @@ function RegistrationsModule() {
   const [guideRegs, setGuideRegs] = useState(() => {
     try {
       const s = localStorage.getItem("by-guide-applications");
-      if (s) return JSON.parse(s);
+      if (s) {
+        const parsed = JSON.parse(s);
+        if (Array.isArray(parsed)) return parsed;
+      }
     } catch (e) {}
     return [
       { id: "GD-301", type: "Guide Application", name: "B. Ramesh Babu", phone: "+91 98482 11992", city: "Visakhapatnam", state: "Andhra Pradesh", address: "Dolphin Hill Colony, Vizag", hiddenSpot: "Ross Hill Chapel sunset vantage overlooking harbor mouth", bio: "10+ years exploring coastal Andhra heritage", status: "Pending Verification", lat: 17.6868, lng: 83.2185 },
@@ -183,9 +192,9 @@ function RegistrationsModule() {
   const [updateNotice, setUpdateNotice] = useState("");
 
   const allRegistrations = [
-    ...safetyRegs.map(r => ({ ...r, category: "Safety Trip" })),
-    ...elderRegs.map(r => ({ ...r, category: "Elder Care" })),
-    ...guideRegs.map(r => ({ ...r, category: "Guide Application" })),
+    ...(Array.isArray(safetyRegs) ? safetyRegs : []).map(r => ({ ...r, category: "Safety Trip" })),
+    ...(Array.isArray(elderRegs) ? elderRegs : []).map(r => ({ ...r, category: "Elder Care" })),
+    ...(Array.isArray(guideRegs) ? guideRegs : []).map(r => ({ ...r, category: "Guide Application" })),
   ];
 
   const filtered = allRegistrations.filter(r => {

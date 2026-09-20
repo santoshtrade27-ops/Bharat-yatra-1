@@ -47,7 +47,7 @@ export default function Shop() {
       } catch {}
       if (base44?.entities?.Product?.list) {
         base44.entities.Product.list("-created_date", 100).then((list) => {
-          if (list && list.length) setProducts(list);
+          if (Array.isArray(list) && list.length) setProducts(list);
         }).catch(() => {});
       }
     };
@@ -72,7 +72,8 @@ export default function Shop() {
     return () => window.removeEventListener("order-track-open", handleOrderTrack);
   }, []);
 
-  const filtered = products.filter((p) => {
+  const safeProducts = Array.isArray(products) ? products : [];
+  const filtered = safeProducts.filter((p) => {
     if (filter === "All") return true;
     if (filter === "Premium") return p.price >= 5000;
     if (filter === "High") return p.price >= 1500 && p.price < 5000;

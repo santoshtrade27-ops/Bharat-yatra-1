@@ -165,15 +165,15 @@ export default function StateGallery({ limit }) {
     if (cached) {
       try {
         const parsed = JSON.parse(cached);
-        if (parsed && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       } catch (e) {}
     }
-    return STATE_GALLERY_DATA;
+    return Array.isArray(STATE_GALLERY_DATA) ? STATE_GALLERY_DATA : [];
   });
 
   useEffect(() => {
     function handleUpdate(e) {
-      if (e.detail && e.detail.length > 0) {
+      if (Array.isArray(e?.detail) && e.detail.length > 0) {
         setItems(e.detail);
       }
     }
@@ -183,7 +183,9 @@ export default function StateGallery({ limit }) {
     };
   }, []);
 
-  const filteredItems = items.filter((item) => {
+  const safeItems = Array.isArray(items) ? items : [];
+  const filteredItems = safeItems.filter((item) => {
+    if (!item) return false;
     const stateName = item.state || "";
     const landmarkName = item.landmark || "";
     const titleName = item.title || "";
@@ -195,7 +197,7 @@ export default function StateGallery({ limit }) {
     return matchesRegion && matchesSearch;
   });
 
-  const displayItems = limit ? filteredItems.slice(0, limit) : filteredItems;
+  const displayItems = Array.isArray(filteredItems) ? (limit ? filteredItems.slice(0, limit) : filteredItems) : [];
 
   return (
     <div className="w-full">
@@ -270,7 +272,7 @@ export default function StateGallery({ limit }) {
         </div>
       ) : (
         <div className="flex gap-6 overflow-x-auto pb-6 snap-x scrollbar-none -mx-1 px-1">
-          {displayItems.map((item) => (
+          {(Array.isArray(displayItems) ? displayItems : []).map((item) => (
             <div key={item.id} className="min-w-[290px] max-w-[290px] sm:min-w-[360px] sm:max-w-[360px] snap-start shrink-0">
               <ThreeDTiltCard
                 key={item.id}

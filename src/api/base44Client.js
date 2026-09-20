@@ -25,7 +25,10 @@ const STORAGE_PREFIX = 'by_entity_';
 function getStoredList(entityName) {
   try {
     const raw = localStorage.getItem(STORAGE_PREFIX + entityName);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
+    }
   } catch {}
   if (entityName === 'Place') {
     return (heritageSites || []).map((p) => ({ ...p, created_date: new Date().toISOString() }));
@@ -72,21 +75,29 @@ const mockEntities = new Proxy({}, {
       list: async (_sort, _limit) => {
         if (realClient?.entities?.[entityName]?.list) {
           try {
-            return await realClient.entities[entityName].list(_sort, _limit);
+            const res = await realClient.entities[entityName].list(_sort, _limit);
+            if (Array.isArray(res)) return res;
+            if (Array.isArray(res?.data)) return res.data;
+            if (Array.isArray(res?.items)) return res.items;
           } catch {}
         }
-        return getStoredList(entityName);
+        const fallback = getStoredList(entityName);
+        return Array.isArray(fallback) ? fallback : [];
       },
       filter: async (query, _sort, _limit) => {
         if (realClient?.entities?.[entityName]?.filter) {
           try {
-            return await realClient.entities[entityName].filter(query, _sort, _limit);
+            const res = await realClient.entities[entityName].filter(query, _sort, _limit);
+            if (Array.isArray(res)) return res;
+            if (Array.isArray(res?.data)) return res.data;
+            if (Array.isArray(res?.items)) return res.items;
           } catch {}
         }
         const list = getStoredList(entityName);
-        if (!query) return list;
-        return list.filter((item) =>
-          Object.entries(query).every(([key, val]) => item[key] === val)
+        const safeList = Array.isArray(list) ? list : [];
+        if (!query) return safeList;
+        return safeList.filter((item) =>
+          item && typeof item === 'object' && Object.entries(query).every(([key, val]) => item[key] === val)
         );
       },
       get: async (id) => {
