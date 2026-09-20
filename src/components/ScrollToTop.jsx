@@ -16,6 +16,12 @@ export default function ScrollToTop() {
   const navigationType = useNavigationType();
 
   useEffect(() => {
+    if (pathname !== "/") {
+      try {
+        sessionStorage.setItem("by-has-turned-page", "true");
+      } catch {}
+    }
+
     if (navigationType === "POP") return;
 
     if (hash) {

@@ -63,7 +63,15 @@ const groupOverviews = {
 };
 
 export default function Home() {
-  const [media, setMedia] = useState("photo");
+  const [media, setMedia] = useState(() => {
+    try {
+      if (sessionStorage.getItem("by-has-turned-page") === "true") {
+        return "photo";
+      }
+    } catch {}
+    // In starting, default video should be there
+    return "video";
+  });
   const [heroVideo, setHeroVideo] = useState("p8mXAQ6cPxg");
   const [heroVideoUrl, setHeroVideoUrl] = useState(
     "https://media.base44.com/videos/public/6a9bae9fd15b41c75cea5237/4135fd9b0_vidssavecomIncredibleIndia4K-BeyondtheStereotypes_TheRealIndiaRevealed720P.mp4"
@@ -166,8 +174,24 @@ export default function Home() {
       window.removeEventListener("by-places-updated", loadPlaces);
       window.removeEventListener("by-foods-updated", loadFoods);
       window.removeEventListener("by-products-updated", loadProducts);
+      try {
+        sessionStorage.setItem("by-has-turned-page", "true");
+      } catch {}
     };
   }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 250) {
+        try {
+          sessionStorage.setItem("by-has-turned-page", "true");
+        } catch {}
+      }
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
     <div>
       {/* Hero */}
@@ -182,7 +206,10 @@ export default function Home() {
 
         <div className="absolute top-5 right-4 z-20 flex items-center gap-1 p-1 rounded-full bg-stone-900/80 backdrop-blur-md border border-stone-800 text-stone-200 text-xs font-medium shadow-lg">
           <button
-            onClick={() => setMedia("photo")}
+            onClick={() => {
+              setMedia("photo");
+              try { sessionStorage.setItem("by-has-turned-page", "true"); } catch {}
+            }}
             className={`flex items-center gap-1 px-3 py-1.5 rounded-full transition-all ${
               media === "photo" ? "bg-amber-500 text-stone-900 font-bold shadow-md" : "hover:text-amber-400"
             }`}
