@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { 
-  LogIn, Mail, Lock, Loader2
+  LogIn, Mail, Lock, Loader2, KeyRound, ChevronRight
 } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
 import GoogleIcon from "@/components/GoogleIcon";
@@ -16,7 +16,8 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { loginWithEmailPassword, loginWithGoogle, quickSwitchRole } = useAuth();
+  const [showQuickLogins, setShowQuickLogins] = useState(true);
+  const { loginWithEmailPassword, loginWithGoogle, quickSwitchRole, systemCredentials } = useAuth();
   const navigate = useNavigate();
   const returnTo = safeReturnTo();
 
@@ -26,10 +27,14 @@ export default function Login() {
     setLoading(true);
     try {
       const loggedUser = await loginWithEmailPassword(email, password);
-      if (loggedUser.role === "tourist") {
+      if (returnTo && returnTo !== "/login" && returnTo !== "/") {
+        navigate(returnTo);
+      } else if (loggedUser.isAdmin || loggedUser.role === "admin") {
+        navigate("/admin");
+      } else if (loggedUser.role === "tourist") {
         navigate("/profile");
       } else {
-        navigate(returnTo !== "/login" && returnTo !== "/" ? returnTo : "/admin");
+        navigate("/admin");
       }
     } catch (err) {
       setError(err.message || "Invalid email or password");
@@ -40,12 +45,15 @@ export default function Login() {
 
   const handleGoogle = async () => {
     setLoading(true);
+    setError("");
     try {
       const loggedUser = await loginWithGoogle();
-      if (loggedUser?.role === "tourist") {
-        navigate(returnTo !== "/login" && returnTo !== "/admin" && returnTo !== "/" ? returnTo : "/profile");
+      if (returnTo && returnTo !== "/login" && returnTo !== "/") {
+        navigate(returnTo);
+      } else if (loggedUser?.isAdmin || loggedUser?.role === "admin") {
+        navigate("/admin");
       } else {
-        navigate(returnTo !== "/login" && returnTo !== "/" ? returnTo : "/admin");
+        navigate("/profile");
       }
     } catch (err) {
       setError(err.message || "Google login failed");
@@ -57,8 +65,10 @@ export default function Login() {
   const handleQuickSelect = (cred) => {
     setEmail(cred.email);
     setPassword(cred.password);
-    quickSwitchRole(cred.role);
-    if (cred.role === "tourist") {
+    const user = quickSwitchRole(cred.role);
+    if (returnTo && returnTo !== "/login" && returnTo !== "/") {
+      navigate(returnTo);
+    } else if (user.role === "tourist") {
       navigate("/profile");
     } else {
       navigate("/admin");
@@ -157,10 +167,51 @@ export default function Login() {
                   Signing in...
                 </>
               ) : (
-                "Sign In to Dashboard"
+                "Sign In"
               )}
             </Button>
           </form>
+
+          {/* Quick System Passwords Helper */}
+          <div className="mt-6 pt-5 border-t border-border/70">
+            <button
+              type="button"
+              onClick={() => setShowQuickLogins((v) => !v)}
+              className="w-full flex items-center justify-between text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors py-1"
+            >
+              <span className="flex items-center gap-1.5">
+                <KeyRound className="w-3.5 h-3.5 text-primary" />
+                One-Click Role Demo Logins
+              </span>
+              <span className="text-[10px] uppercase font-bold text-primary">
+                {showQuickLogins ? "Hide" : "Show All"}
+              </span>
+            </button>
+
+            {showQuickLogins && (
+              <div className="mt-3 space-y-2">
+                {systemCredentials.slice(0, 4).map((cred) => (
+                  <button
+                    key={cred.email}
+                    type="button"
+                    onClick={() => handleQuickSelect(cred)}
+                    className="w-full p-2.5 rounded-xl border border-border/70 hover:border-primary/50 bg-muted/30 hover:bg-muted/60 transition-all text-left flex items-center justify-between group"
+                  >
+                    <div className="min-w-0 pr-2">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-bold text-foreground truncate">{cred.fullName}</span>
+                        <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-primary/10 text-primary font-semibold">
+                          {cred.badge}
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-muted-foreground font-mono truncate">{cred.email}</div>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </AuthLayout>
       </div>
     </div>

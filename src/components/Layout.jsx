@@ -1,12 +1,15 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Menu, X, Mic, Sun, Moon, Phone, User, Shield, 
-  Compass, LogIn, LogOut, Send
+  Compass, LogIn, LogOut, Send, ShoppingBag, Landmark, 
+  Sparkles, Gift, Map as MapIcon, Calendar, ShieldAlert, 
+  Languages, ChevronRight, CheckCircle2, HeartHandshake
 } from "lucide-react";
 import { useTheme } from "@/lib/theme";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/AuthContext";
+import { useCart } from "@/lib/cart";
 import OfflineBanner from "@/components/OfflineBanner";
 import BottomNav from "@/components/BottomNav";
 import AIAssistant from "@/components/AIAssistant";
@@ -14,15 +17,26 @@ import CartDrawer from "@/components/CartDrawer";
 import LanguageToggle from "@/components/LanguageToggle";
 
 const navKeys = [
-  { to: "/heritage", key: "nav_heritage" },
-  { to: "/planner", key: "nav_planner" },
-  { to: "/surprise-planner", key: "nav_surprise_planner" },
-  { to: "/map", key: "nav_map" },
-  { to: "/events", key: "nav_events" },
-  { to: "/guides", key: "nav_guides" },
-  { to: "/shop", key: "nav_shop" },
-  { to: "/safety", key: "nav_safety" },
-  { to: "/translate", key: "nav_translate" },
+  { to: "/heritage", key: "nav_heritage", icon: Landmark, desc: "Monuments, Caves & Temples" },
+  { to: "/planner", key: "nav_planner", icon: Sparkles, badge: "AI", desc: "Real trains, hotels & itinerary" },
+  { to: "/surprise-planner", key: "nav_surprise_planner", icon: Gift, desc: "Cultural gifts & surprise tours" },
+  { to: "/map", key: "nav_map", icon: MapIcon, desc: "Interactive geographic exploration" },
+  { to: "/events", key: "nav_events", icon: Calendar, desc: "Festivals, melas & seasonal fairs" },
+  { to: "/guides", key: "nav_guides", icon: Compass, desc: "Licensed ASI certified guides" },
+  { to: "/shop", key: "nav_shop", icon: ShoppingBag, desc: "Direct rural artisan crafts" },
+  { to: "/safety", key: "nav_safety", icon: ShieldAlert, alert: true, desc: "Emergency SOS & scam alerts" },
+  { to: "/translate", key: "nav_translate", icon: Languages, desc: "Real-time speech & voice" },
+];
+
+const mobileLanguages = [
+  { code: "en", label: "English" },
+  { code: "hi", label: "हिन्दी" },
+  { code: "te", label: "తెలుగు" },
+  { code: "ta", label: "தமிழ்" },
+  { code: "bn", label: "বাংলা" },
+  { code: "mr", label: "मराठी" },
+  { code: "gu", label: "ગુજરાતી" },
+  { code: "kn", label: "ಕನ್ನಡ" },
 ];
 
 export default function Layout() {
@@ -42,7 +56,13 @@ export default function Layout() {
   const { pathname } = useLocation();
   const { theme, toggle } = useTheme();
   const { lang, setLang, t } = useI18n();
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout, user } = useAuth();
+  const { count: cartCount } = useCart();
+
+  // Close drawer on location changes
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
 
   const handleGuideSubmit = (e) => {
     e.preventDefault();
@@ -82,11 +102,12 @@ export default function Layout() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground pb-16 md:pb-0">
-      <header className="sticky top-0 z-50 glass border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-          <Link to="/" className="flex items-center gap-2.5 shrink-0">
-            <span className="w-9 h-9 rounded-full bg-primary text-primary-foreground grid place-items-center font-bold text-lg shadow-md">
+    <div className="min-h-screen bg-background text-foreground pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:pb-0">
+      <header className="sticky top-0 z-40 glass border-b border-border/70 backdrop-blur-xl">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 h-15 sm:h-16 flex items-center justify-between gap-2 sm:gap-4">
+          {/* Logo & Brand */}
+          <Link to="/" className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+            <span className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-primary text-primary-foreground grid place-items-center font-bold text-base sm:text-lg shadow-sm">
               ब
             </span>
             <span className="font-heading font-semibold tracking-wide text-sm sm:text-base">
@@ -94,14 +115,15 @@ export default function Layout() {
             </span>
           </Link>
 
-          <nav className="hidden lg:flex items-center gap-6 xl:gap-8">
+          {/* Desktop Navigation Links */}
+          <nav className="hidden lg:flex items-center gap-5 xl:gap-7">
             {navKeys.map((l) => (
               <Link
                 key={l.to}
                 to={l.to}
                 className={`text-xs font-semibold tracking-wide transition-colors ${
                   pathname.startsWith(l.to)
-                    ? "text-primary"
+                    ? "text-primary font-bold"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -110,20 +132,51 @@ export default function Layout() {
             ))}
           </nav>
 
-          <div className="flex items-center gap-1.5">
+          {/* Header Action Controls */}
+          <div className="flex items-center gap-1 sm:gap-1.5">
+            {/* Language Selector (Desktop) */}
             <div className="hidden sm:block">
               <LanguageToggle
                 selectedLang={lang}
                 onSelectLang={setLang}
               />
             </div>
+
+            {/* Emergency SOS Button (Always visible on mobile & desktop) */}
+            <Link
+              to="/safety"
+              className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-bold rounded-full border border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground transition-colors shadow-xs"
+              title="Tourist Emergency SOS & Scam Police"
+            >
+              <Phone className="w-3 h-3 sm:w-3.5 sm:h-3.5 animate-pulse" /> 
+              <span>SOS</span>
+            </Link>
+
+            {/* Cart Button (Always visible) */}
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent("cart-open"))}
+              className="relative w-8.5 h-8.5 sm:w-9 sm:h-9 grid place-items-center rounded-full hover:bg-muted text-foreground transition-colors"
+              aria-label="Artisan Cart"
+              title="Artisan Cart"
+            >
+              <ShoppingBag className="w-4 h-4" />
+              {cartCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[17px] h-[17px] px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center shadow-xs animate-in zoom-in-50">
+                  {cartCount > 9 ? "9+" : cartCount}
+                </span>
+              )}
+            </button>
+
+            {/* Theme Toggle */}
             <button
               onClick={toggle}
-              className="w-9 h-9 grid place-items-center rounded-full hover:bg-muted transition-colors"
+              className="w-8.5 h-8.5 sm:w-9 sm:h-9 grid place-items-center rounded-full hover:bg-muted transition-colors"
               aria-label="Toggle theme"
             >
               {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
+
+            {/* Voice Translator (Desktop) */}
             <Link
               to="/translate"
               className="hidden sm:grid place-items-center w-9 h-9 rounded-full hover:bg-muted transition-colors text-primary"
@@ -132,24 +185,24 @@ export default function Layout() {
             >
               <Mic className="w-4 h-4" />
             </Link>
-            <Link
-              to="/safety"
-              className="hidden sm:flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-full border border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground transition-colors"
-            >
-              <Phone className="w-3.5 h-3.5" /> SOS
-            </Link>
+
+            {/* Admin (Desktop) */}
             <Link
               to="/admin"
-              className="hidden sm:grid place-items-center w-9 h-9 rounded-full hover:bg-muted transition-colors"
-              aria-label="Admin"
+              className="hidden sm:grid place-items-center w-9 h-9 rounded-full hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+              aria-label="Admin Directorate"
+              title="Admin Directorate"
             >
               <Shield className="w-4 h-4" />
             </Link>
+
+            {/* Auth / Profile (Desktop) */}
             {isAuthenticated ? (
               <button
                 onClick={() => logout()}
-                className="hidden sm:grid place-items-center w-9 h-9 rounded-full hover:bg-muted transition-colors"
+                className="hidden sm:grid place-items-center w-9 h-9 rounded-full hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
                 aria-label="Logout"
+                title="Logout"
               >
                 <LogOut className="w-4 h-4" />
               </button>
@@ -161,76 +214,233 @@ export default function Layout() {
                 <LogIn className="w-3.5 h-3.5" /> Login
               </Link>
             )}
+
+            {/* User Profile Avatar */}
             <Link
               to="/profile"
-              className="w-9 h-9 grid place-items-center rounded-full bg-primary/15 text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
-              aria-label="Profile"
+              className="w-8.5 h-8.5 sm:w-9 sm:h-9 grid place-items-center rounded-full bg-primary/15 text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
+              aria-label="User Profile"
+              title="My Profile & Trips"
             >
               <User className="w-4 h-4" />
             </Link>
+
+            {/* Mobile Menu Toggle Button */}
             <button
-              className="lg:hidden w-9 h-9 grid place-items-center rounded-full hover:bg-muted"
+              className="lg:hidden w-8.5 h-8.5 grid place-items-center rounded-full hover:bg-muted transition-colors"
               onClick={() => setOpen((v) => !v)}
-              aria-label="Menu"
+              aria-label={open ? "Close menu" : "Open menu"}
             >
-              {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {open ? <X className="w-5 h-5 text-primary" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
         </div>
 
+        {/* Mobile Slide-Over Drawer Sheet */}
         {open && (
-          <div className="lg:hidden border-t border-border bg-card px-4 py-3">
-            <div className="grid grid-cols-2 gap-3.5">
-              {navKeys.map((l) => (
-                <Link
-                  key={l.to}
-                  to={l.to}
-                  onClick={() => setOpen(false)}
-                  className="py-2.5 px-2 text-center text-sm text-muted-foreground hover:text-primary rounded-lg hover:bg-muted"
-                >
-                  {t(l.key)}
-                </Link>
-              ))}
-            </div>
-            <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-border">
-              <div className="w-full sm:w-auto">
-                <LanguageToggle
-                  selectedLang={lang}
-                  onSelectLang={setLang}
-                />
-              </div>
-              <Link
-                to="/admin"
-                onClick={() => setOpen(false)}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-primary hover:bg-muted"
-              >
-                <Shield className="w-4 h-4" /> Admin
-              </Link>
-              <Link
-                to="/safety"
-                onClick={() => setOpen(false)}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm text-destructive hover:bg-destructive hover:text-destructive-foreground"
-              >
-                <Phone className="w-4 h-4" /> SOS
-              </Link>
-            </div>
-            <div className="flex items-center gap-2 mt-2 pt-2 border-t border-border">
-              {isAuthenticated ? (
+          <div className="fixed inset-0 z-50 lg:hidden">
+            {/* Dimmed Backdrop */}
+            <div 
+              className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity animate-in fade-in duration-200" 
+              onClick={() => setOpen(false)}
+            />
+
+            {/* Slide-over Drawer Panel */}
+            <div className="fixed top-0 right-0 bottom-0 w-[85vw] max-w-xs sm:max-w-sm bg-card border-l border-border shadow-2xl flex flex-col z-50 animate-in slide-in-from-right duration-250 pb-safe overflow-hidden">
+              {/* Drawer Top Bar */}
+              <div className="p-4 border-b border-border flex items-center justify-between bg-muted/30">
+                <div className="flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-full bg-primary text-primary-foreground grid place-items-center font-bold text-sm shadow-xs">
+                    ब
+                  </span>
+                  <div>
+                    <h3 className="font-heading font-bold text-sm text-foreground">BHARAT YATRA</h3>
+                    <p className="text-[10px] text-muted-foreground">National Cultural Tourism</p>
+                  </div>
+                </div>
                 <button
-                  onClick={() => { setOpen(false); logout(); }}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted ml-auto"
-                >
-                  <LogOut className="w-4 h-4" /> Logout
-                </button>
-              ) : (
-                <Link
-                  to="/login"
                   onClick={() => setOpen(false)}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-primary hover:bg-primary/10 ml-auto"
+                  className="p-1.5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="Close menu"
                 >
-                  <LogIn className="w-4 h-4" /> Login
-                </Link>
-              )}
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Drawer Content Body (Scrollable) */}
+              <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4 touch-scroll">
+                {/* User Status Card */}
+                <div className="p-3 rounded-2xl bg-muted/50 border border-border flex items-center justify-between">
+                  <div className="flex items-center gap-2.5 truncate">
+                    <div className="w-9 h-9 rounded-full bg-primary/20 text-primary grid place-items-center font-bold shrink-0">
+                      <User className="w-4 h-4" />
+                    </div>
+                    <div className="truncate">
+                      <p className="text-xs font-bold text-foreground truncate">
+                        {isAuthenticated ? (user?.name || user?.email || "Authenticated Traveler") : "Guest Traveler"}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground truncate">
+                        {isAuthenticated ? "Govt Verified Account" : "Sign in to save trips & bookings"}
+                      </p>
+                    </div>
+                  </div>
+                  {isAuthenticated ? (
+                    <button
+                      onClick={() => { setOpen(false); logout(); }}
+                      className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                      title="Logout"
+                    >
+                      <LogOut className="w-4 h-4" />
+                    </button>
+                  ) : (
+                    <Link
+                      to="/login"
+                      onClick={() => setOpen(false)}
+                      className="px-2.5 py-1 rounded-lg bg-primary text-primary-foreground text-xs font-bold shrink-0 shadow-xs"
+                    >
+                      Login
+                    </Link>
+                  )}
+                </div>
+
+                {/* Quick Emergency Strip */}
+                <div className="p-2.5 rounded-xl bg-destructive/10 border border-destructive/20 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 text-xs font-bold text-destructive">
+                    <Phone className="w-3.5 h-3.5 animate-pulse shrink-0" />
+                    <span>Helpline 1800-11-1363</span>
+                  </div>
+                  <a
+                    href="tel:1800111363"
+                    className="px-2.5 py-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold shadow-xs shrink-0"
+                  >
+                    Call SOS
+                  </a>
+                </div>
+
+                {/* Regional Language Quick Selector */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                      <Languages className="w-3 h-3 text-primary" /> Language / भाषा
+                    </span>
+                    <span className="text-[10px] font-medium text-primary">
+                      {mobileLanguages.find(l => l.code === lang)?.label || "English"}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {mobileLanguages.map((ml) => (
+                      <button
+                        key={ml.code}
+                        onClick={() => setLang(ml.code)}
+                        className={`py-1 px-1 rounded-lg text-center text-xs font-medium transition-all ${
+                          lang === ml.code
+                            ? "bg-primary text-primary-foreground font-bold shadow-xs"
+                            : "bg-muted/70 text-muted-foreground hover:text-foreground hover:bg-muted"
+                        }`}
+                      >
+                        {ml.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Navigation Links Group */}
+                <div>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block mb-1.5">
+                    Explore & Services
+                  </span>
+                  <div className="space-y-1">
+                    {navKeys.map((item) => {
+                      const Icon = item.icon;
+                      const active = pathname.startsWith(item.to);
+
+                      return (
+                        <Link
+                          key={item.to}
+                          to={item.to}
+                          onClick={() => setOpen(false)}
+                          className={`flex items-center justify-between p-2.5 rounded-xl transition-all ${
+                            active
+                              ? "bg-primary/10 text-primary font-bold border border-primary/20"
+                              : "text-foreground hover:bg-muted/60"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className={`p-1.5 rounded-lg ${
+                              active ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                            }`}>
+                              <Icon className="w-4 h-4" />
+                            </span>
+                            <div>
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-xs font-semibold">{t(item.key)}</span>
+                                {item.badge && (
+                                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-primary/20 text-primary">
+                                    {item.badge}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-[10px] text-muted-foreground leading-tight">{item.desc}</p>
+                            </div>
+                          </div>
+                          <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Administrative & Direct Actions */}
+                <div className="pt-2 border-t border-border space-y-1">
+                  <Link
+                    to="/admin"
+                    onClick={() => setOpen(false)}
+                    className="flex items-center justify-between p-2 rounded-xl text-xs text-muted-foreground hover:text-foreground hover:bg-muted"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Shield className="w-4 h-4 text-primary" />
+                      <span>Admin Directorate Panel</span>
+                    </div>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </Link>
+
+                  <button
+                    onClick={() => { setOpen(false); setGuideModalOpen(true); }}
+                    className="w-full flex items-center justify-between p-2 rounded-xl text-xs text-muted-foreground hover:text-foreground hover:bg-muted text-left"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <HeartHandshake className="w-4 h-4 text-amber-500" />
+                      <span>Register as Certified Guide</span>
+                    </div>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+
+                  <a
+                    href="https://wa.me/918019402710"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between p-2 rounded-xl text-xs text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 font-semibold"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <span>💬</span>
+                      <span>Chat with WhatsApp Bot</span>
+                    </div>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+              </div>
+
+              {/* Drawer Bottom Footer */}
+              <div className="p-4 border-t border-border bg-muted/20 flex items-center justify-between text-xs">
+                <span className="text-muted-foreground text-[11px]">Theme</span>
+                <button
+                  onClick={toggle}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border bg-card text-foreground font-semibold shadow-xs"
+                >
+                  {theme === "dark" ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5" />}
+                  <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
+                </button>
+              </div>
             </div>
           </div>
         )}

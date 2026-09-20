@@ -154,14 +154,14 @@ export default function AIAssistant() {
     <>
       <button
         onClick={() => setOpen((v) => !v)}
-        className="fixed bottom-20 md:bottom-6 right-5 z-50 w-14 h-14 rounded-full bg-primary text-primary-foreground grid place-items-center shadow-xl hover:scale-105 transition-transform"
+        className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] md:bottom-6 right-4 z-40 w-12 h-12 md:w-14 md:h-14 rounded-full bg-primary text-primary-foreground grid place-items-center shadow-xl hover:scale-105 active:scale-95 transition-all border border-primary/20"
         aria-label="AI assistant"
       >
-        {open ? <X className="w-6 h-6" /> : <Sparkles className="w-6 h-6" />}
+        {open ? <X className="w-5 h-5 md:w-6 md:h-6" /> : <Sparkles className="w-5 h-5 md:w-6 md:h-6" />}
       </button>
 
       {open && (
-        <div className="fixed bottom-36 md:bottom-24 right-5 z-50 w-[92vw] max-w-sm glass rounded-2xl border border-border shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="fixed bottom-[calc(5.25rem+env(safe-area-inset-bottom,0px))] inset-x-3 sm:inset-x-auto sm:right-5 sm:bottom-24 sm:w-96 max-h-[75vh] sm:max-h-[520px] z-50 glass rounded-2xl border border-border shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
           <div className="px-4 py-3 border-b border-border flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-primary" />

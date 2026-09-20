@@ -110,12 +110,18 @@ export default function Profile() {
     try {
       const savedProf = localStorage.getItem("by-user-profile");
       if (savedProf) {
-        setProfile(JSON.parse(savedProf));
+        const parsed = JSON.parse(savedProf);
+        setProfile((prev) => ({
+          ...prev,
+          ...parsed,
+          email: authUser?.email || parsed.email || prev.email,
+          name: authUser?.name || authUser?.displayName || authUser?.full_name || parsed.name || prev.name,
+        }));
       } else if (authUser?.email) {
         setProfile((prev) => ({
           ...prev,
           email: authUser.email,
-          name: authUser.name || prev.name,
+          name: authUser.name || authUser.displayName || authUser.full_name || prev.name,
         }));
       }
     } catch {}

@@ -1,23 +1,27 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as fbSignOut } from 'firebase/auth';
-import { getFirestore, initializeFirestore, doc, getDocFromServer } from 'firebase/firestore';
+import { 
+  getAuth, 
+  GoogleAuthProvider, 
+  signInWithPopup, 
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut as fbSignOut,
+  sendPasswordResetEmail,
+  updateProfile,
+  onAuthStateChanged
+} from 'firebase/auth';
+import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
 import firebaseConfig from '../../../firebase-applet-config.json';
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
 export const auth = getAuth(app);
 
-let firestoreDb;
-try {
-  firestoreDb = initializeFirestore(app, {
-    experimentalAutoDetectLongPolling: true,
-  }, firebaseConfig.firestoreDatabaseId);
-} catch (e) {
-  firestoreDb = getFirestore(app, firebaseConfig.firestoreDatabaseId);
-}
+// Initialize Firestore with specific database ID as required by AI Studio
+export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
 
-export const db = firestoreDb;
 export const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({ prompt: 'select_account' });
 
 export const OperationType = {
   CREATE: 'create',
@@ -49,7 +53,7 @@ export function handleFirestoreError(error, operationType, path = null) {
   throw new Error(JSON.stringify(errInfo));
 }
 
-// Test connection on boot with safety timeout to prevent hanging or loud 10s backend warnings
+// Test connection on boot with safety timeout
 export async function testConnection() {
   try {
     const timeoutPromise = new Promise((_, reject) =>
@@ -60,7 +64,7 @@ export async function testConnection() {
       timeoutPromise
     ]);
   } catch (error) {
-    if (error instanceof Error) {
+    if (error instanceof Error && !error.message.includes('connection timeout')) {
       console.warn('Firestore connection note:', error.message);
     }
   }
@@ -68,4 +72,12 @@ export async function testConnection() {
 
 testConnection();
 
-export { signInWithPopup, fbSignOut };
+export { 
+  signInWithPopup, 
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  fbSignOut,
+  sendPasswordResetEmail,
+  updateProfile,
+  onAuthStateChanged
+};

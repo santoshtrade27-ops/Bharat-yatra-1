@@ -649,17 +649,17 @@ Return ${days} days with short title and descriptive heritage sights strictly in
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 shrink-0">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 shrink-0">
                 <button
                   type="button"
                   onClick={() => generateTripVoucherPDF(confirmedBooking)}
-                  className="px-5 py-3 rounded-full bg-primary text-primary-foreground font-bold text-xs sm:text-sm shadow-md hover:opacity-90 flex items-center gap-2 transition-all"
+                  className="px-5 py-3 rounded-full bg-primary text-primary-foreground font-bold text-xs sm:text-sm shadow-md hover:opacity-90 flex items-center justify-center gap-2 transition-all active:scale-95"
                 >
-                  <Download className="w-4 h-4" /> Download PDF Itinerary & Voucher
+                  <Download className="w-4 h-4" /> Download PDF Voucher
                 </button>
                 <Link
                   to="/profile?tab=trips"
-                  className="px-4 py-3 rounded-full bg-card border border-border text-foreground font-bold text-xs hover:bg-muted transition-colors"
+                  className="px-4 py-3 rounded-full bg-card border border-border text-foreground font-bold text-xs hover:bg-muted text-center transition-colors active:scale-95"
                 >
                   View in My Profile
                 </Link>
@@ -677,10 +677,10 @@ Return ${days} days with short title and descriptive heritage sights strictly in
       )}
 
       {/* Main Form & Inventory Grid */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 grid lg:grid-cols-12 gap-8">
+      <section className="max-w-7xl mx-auto px-3 sm:px-6 grid lg:grid-cols-12 gap-6 sm:gap-8">
         {/* Left Column: Form & Conditions (5 cols) */}
-        <div className="lg:col-span-5 space-y-6">
-          <div className="p-6 rounded-3xl bg-card border border-border shadow-sm space-y-5">
+        <div className="lg:col-span-5 space-y-5 sm:space-y-6">
+          <div className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-card border border-border shadow-xs space-y-4 sm:space-y-5">
             <div className="flex items-center justify-between pb-3 border-b border-border">
               <h2 className="font-bold text-base text-foreground flex items-center gap-2 font-heading">
                 <Compass className="w-4 h-4 text-primary" /> Step 1: Destination & Dates
@@ -1266,9 +1266,9 @@ Return ${days} days with short title and descriptive heritage sights strictly in
         </div>
 
         {/* Right Column: Real Hotels Inventory & Booking Gateways (7 cols) */}
-        <div className="lg:col-span-7 space-y-6">
+        <div className="lg:col-span-7 space-y-5 sm:space-y-6">
           {/* Step 2: Real Hotel Selection for Destination */}
-          <div className="p-6 rounded-3xl bg-card border border-border shadow-sm space-y-4">
+          <div className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-card border border-border shadow-xs space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-3 border-b border-border">
               <div>
                 <h3 className="font-bold text-base text-foreground flex items-center gap-2 font-heading">
@@ -1285,7 +1285,7 @@ Return ${days} days with short title and descriptive heritage sights strictly in
 
             {/* Hotel Cards List */}
             <div className="space-y-3.5 max-h-[440px] overflow-y-auto pr-1">
-              {(matchingHotels || []).map(h => {
+              {matchingHotels.map(h => {
                 const isSelected = selectedHotel?.name === h.name;
                 return (
                   <div
@@ -1372,7 +1372,7 @@ Return ${days} days with short title and descriptive heritage sights strictly in
 
           {/* AI Itinerary Schedule */}
           {plan && (
-            <div className="p-6 rounded-3xl bg-card border border-border shadow-sm space-y-4">
+            <div className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-card border border-border shadow-xs space-y-4">
               <div className="flex items-center justify-between">
                 <div>
                   <span className="text-[10px] font-bold uppercase tracking-wider text-primary bg-primary/10 px-2.5 py-1 rounded-full">
@@ -1392,7 +1392,7 @@ Return ${days} days with short title and descriptive heritage sights strictly in
 
               {/* Day by Day Cards */}
               <div className="space-y-3 pt-2">
-                {(plan?.itinerary || []).map(d => (
+                {plan.itinerary.map(d => (
                   <div key={d.day} className="p-3.5 rounded-2xl bg-muted/40 border border-border flex gap-3.5">
                     <span className="w-8 h-8 rounded-full bg-primary text-primary-foreground grid place-items-center text-xs font-bold shrink-0">
                       Day {d.day}
@@ -1497,8 +1497,8 @@ Return ${days} days with short title and descriptive heritage sights strictly in
 
       {/* PAYMENT GATEWAYS DEMO MODAL */}
       {paymentModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-card border border-border rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-card border border-border rounded-2xl sm:rounded-3xl max-w-lg w-full p-4 sm:p-6 space-y-4 sm:space-y-5 shadow-2xl animate-in fade-in zoom-in-95 duration-200 max-h-[92vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-border">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="w-5 h-5 text-emerald-500" />

@@ -106,3 +106,24 @@
 .shadow-3d { box-shadow: 0 25px 35px -10px rgba(0, 0, 0, 0.25), 0 10px 12px -6px rgba(0, 0, 0, 0.15); }
 .shadow-3d-amber { box-shadow: 0 20px 30px -10px rgba(245, 158, 11, 0.3), 0 0 25px rgba(245, 158, 11, 0.2); }
 .glow-3d-amber { filter: drop-shadow(0 10px 20px rgba(245, 158, 11, 0.4)); }
+
+/* Mobile App Layout & Touch Optimizations */
+html, body {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  overscroll-behavior-y: none;
+}
+
+.pb-safe {
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 0.75rem);
+}
+
+.pt-safe {
+  padding-top: max(env(safe-area-inset-top, 0px), 0.5rem);
+}
+
+.touch-scroll {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+

@@ -141,9 +141,16 @@ export default function Admin() {
 
   // Determine initial role from logged in user
   const userRole = user?.role || "admin";
-  const isSuperAdmin = userRole === "admin" || userRole === "super_admin" || user?.email === "santoshtrade27@gmail.com";
-  const isEmployee = user?.isEmployee && !isSuperAdmin;
+  const userEmail = (user?.email || "").toLowerCase();
   const isTourist = userRole === "tourist";
+  const isSuperAdmin = 
+    userRole === "admin" || 
+    userRole === "super_admin" || 
+    user?.isAdmin || 
+    userEmail === "venkatasantosh2478@gmail.com" || 
+    userEmail === "santoshtrade27@gmail.com" ||
+    userEmail.includes("admin");
+  const isEmployee = (user?.isEmployee || isSuperAdmin) && !isTourist;
 
   // Active simulated or dedicated role
   const initialRole = isEmployee 
@@ -243,7 +250,7 @@ export default function Admin() {
             <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
               <div className="px-3 py-1.5 rounded-2xl bg-primary/10 border border-primary/20 text-primary text-xs font-semibold flex items-center gap-1.5">
                 <UserCheck className="w-3.5 h-3.5" />
-                <span>Operator: <strong>{user?.email || "santoshtrade27@gmail.com"}</strong> ({user?.role || "admin"})</span>
+                <span>Operator: <strong>{user?.email || "venkatasantosh2478@gmail.com"}</strong> ({user?.role || "admin"})</span>
               </div>
 
               {isSuperAdmin && activeRole !== "super_admin" && (

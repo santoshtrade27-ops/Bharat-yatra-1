@@ -1,10 +1,11 @@
 import { createClient } from '@base44/sdk';
 import { appParams } from '@/lib/app-params';
+import { heritageSites, foods, products, events } from '@/lib/heritageData';
 
 const { appId, token, functionsVersion, appBaseUrl } = appParams;
 
 let realClient = null;
-if (appId && typeof createClient === 'function') {
+if (appId) {
   try {
     realClient = createClient({
       appId,
@@ -26,10 +27,22 @@ function getStoredList(entityName) {
     const raw = localStorage.getItem(STORAGE_PREFIX + entityName);
     if (raw) return JSON.parse(raw);
   } catch {}
+  if (entityName === 'Place') {
+    return (heritageSites || []).map((p) => ({ ...p, created_date: new Date().toISOString() }));
+  }
+  if (entityName === 'Food') {
+    return (foods || []).map((f, idx) => ({ id: f.id || `food_${idx + 1}`, ...f, created_date: new Date().toISOString() }));
+  }
+  if (entityName === 'Product') {
+    return (products || []).map((pr, idx) => ({ id: pr.id || `prod_${idx + 1}`, ...pr, created_date: new Date().toISOString() }));
+  }
+  if (entityName === 'Event') {
+    return (events || []).map((ev, idx) => ({ id: ev.id || `ev_${idx + 1}`, title: ev.name || ev.title, ...ev, created_date: new Date().toISOString() }));
+  }
   if (entityName === 'User') {
     return [
-      { id: 'usr_1', email: 'yatri@bharatyatra.in', full_name: 'Yatri Explorer', role: 'admin', created_date: new Date().toISOString() },
-      { id: 'usr_2', email: 'ravi.guide@bharatyatra.in', full_name: 'Ravi Sharma (Senior Heritage Guide)', role: 'guide', created_date: new Date().toISOString() },
+      { id: 'usr_santosh_admin', email: 'santoshtrade27@gmail.com', full_name: 'Santosh Trade (Super Admin)', role: 'admin', created_date: new Date().toISOString() },
+      { id: 'usr_2', email: 'abdul.q@bharatyatra.gov.in', full_name: 'Abdul Qadir (ASI Guide Allocator)', role: 'guide', created_date: new Date().toISOString() },
     ];
   }
   if (entityName === 'Booking') {
@@ -64,6 +77,27 @@ const mockEntities = new Proxy({}, {
         }
         return getStoredList(entityName);
       },
+      filter: async (query, _sort, _limit) => {
+        if (realClient?.entities?.[entityName]?.filter) {
+          try {
+            return await realClient.entities[entityName].filter(query, _sort, _limit);
+          } catch {}
+        }
+        const list = getStoredList(entityName);
+        if (!query) return list;
+        return list.filter((item) =>
+          Object.entries(query).every(([key, val]) => item[key] === val)
+        );
+      },
+      get: async (id) => {
+        if (realClient?.entities?.[entityName]?.get) {
+          try {
+            return await realClient.entities[entityName].get(id);
+          } catch {}
+        }
+        const list = getStoredList(entityName);
+        return list.find((x) => x.id === id) || { id };
+      },
       create: async (data) => {
         if (realClient?.entities?.[entityName]?.create) {
           try {
@@ -79,6 +113,22 @@ const mockEntities = new Proxy({}, {
         list.unshift(newItem);
         saveStoredList(entityName, list);
         return newItem;
+      },
+      bulkCreate: async (items) => {
+        if (realClient?.entities?.[entityName]?.bulkCreate) {
+          try {
+            return await realClient.entities[entityName].bulkCreate(items);
+          } catch {}
+        }
+        const list = getStoredList(entityName);
+        const created = (Array.isArray(items) ? items : [items]).map((d) => ({
+          id: 'item_' + Math.random().toString(36).substring(2, 9),
+          created_date: new Date().toISOString(),
+          ...d,
+        }));
+        list.unshift(...created);
+        saveStoredList(entityName, list);
+        return created;
       },
       update: async (id, data) => {
         if (realClient?.entities?.[entityName]?.update) {
@@ -105,6 +155,7 @@ const mockEntities = new Proxy({}, {
         saveStoredList(entityName, list);
         return { success: true };
       },
+      subscribe: () => () => {},
     };
   },
 });

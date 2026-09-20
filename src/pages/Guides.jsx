@@ -11,22 +11,22 @@ export default function Guides() {
   return (
     <div>
       <section className="bg-card border-b border-border">
-        <div className="max-w-7xl mx-auto px-6 py-10">
-          <h1 className="text-3xl font-bold">Verified Guides</h1>
-          <p className="text-muted-foreground mt-2">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
+          <h1 className="text-2xl sm:text-3xl font-bold">Verified Guides</h1>
+          <p className="text-muted-foreground mt-2 text-sm sm:text-base">
             Local experts — call to book your heritage tour.
           </p>
         </div>
       </section>
 
-      <section className="max-w-7xl mx-auto px-6 py-10">
-        <div className="flex flex-wrap gap-2 mb-6">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
+        <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap touch-scroll scrollbar-none mb-6">
           {stateList.map((s) => (
             <button
               key={s}
               onClick={() => setState(s)}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                state === s ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+              className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-colors shrink-0 ${
+                state === s ? "bg-primary text-primary-foreground font-semibold" : "bg-muted text-muted-foreground hover:text-foreground"
               }`}
             >
               {s}

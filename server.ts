@@ -2,6 +2,7 @@ import express, { Request, Response } from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
+import { heritageSites, foods, products, events } from "./src/components/lib/heritageData.js";
 
 const PORT = 3000;
 
@@ -133,6 +134,240 @@ async function startServer() {
       hasGeminiKey: Boolean(process.env.GEMINI_API_KEY),
       model: "gemini-3.8-flash",
     });
+  });
+
+  // ==========================================
+  // Base44 Backend Emulation Endpoints
+  // ==========================================
+  interface EntityRecord {
+    id: string;
+    [key: string]: any;
+  }
+
+  const base44EntityStore: Record<string, EntityRecord[]> = {
+    Place: (heritageSites || []).map((p: any) => ({
+      ...p,
+      created_date: new Date().toISOString(),
+    })),
+    Food: (foods || []).map((f: any, idx: number) => ({
+      id: f.id || `food_${idx + 1}`,
+      ...f,
+      created_date: new Date().toISOString(),
+    })),
+    Product: (products || []).map((pr: any, idx: number) => ({
+      id: pr.id || `prod_${idx + 1}`,
+      ...pr,
+      created_date: new Date().toISOString(),
+    })),
+    Event: (events || []).map((ev: any, idx: number) => ({
+      id: ev.id || `ev_${idx + 1}`,
+      title: ev.name || ev.title,
+      ...ev,
+      created_date: new Date().toISOString(),
+    })),
+    Booking: [
+      {
+        id: "bk_1",
+        title: "Varanasi Ghats & Sarnath Walk",
+        destination: "Varanasi, Uttar Pradesh",
+        status: "confirmed",
+        assigned_guide_id: "usr_2",
+        created_date: new Date().toISOString(),
+      },
+    ],
+    User: [
+      {
+        id: "usr_santosh_admin",
+        email: "santoshtrade27@gmail.com",
+        full_name: "Santosh Trade (Super Admin)",
+        role: "admin",
+        created_date: new Date().toISOString(),
+      },
+      {
+        id: "usr_2",
+        email: "abdul.q@bharatyatra.gov.in",
+        full_name: "Abdul Qadir (ASI Guide Allocator)",
+        role: "guide",
+        created_date: new Date().toISOString(),
+      },
+    ],
+  };
+
+  // Base44 App Public Settings
+  app.get(
+    ["/api/apps/public/prod/public-settings/by-id/:appId", "/api/apps/:appId/public-settings"],
+    (req: Request, res: Response) => {
+      res.json({
+        id: req.params.appId || "bharat-yatra",
+        public_settings: {
+          auth_required: false,
+        },
+      });
+    }
+  );
+
+  // Base44 User Profile (auth.me)
+  app.get(
+    ["/api/apps/:appId/entities/User/me", "/api/apps/:appId/auth/me", "/api/auth/me"],
+    (_req: Request, res: Response) => {
+      res.json({
+        id: "usr_santosh_admin",
+        email: "santoshtrade27@gmail.com",
+        full_name: "Santosh Trade (Super Admin)",
+        displayName: "Santosh Trade",
+        role: "admin",
+      });
+    }
+  );
+
+  // Base44 List / Query Entities
+  app.get("/api/apps/:appId/entities/:entity", (req: Request, res: Response) => {
+    const { entity } = req.params;
+    const { limit, skip, sort, q } = req.query;
+    let list = base44EntityStore[entity] || [];
+
+    if (q && typeof q === "string") {
+      try {
+        const queryObj = JSON.parse(q);
+        list = list.filter((item) => {
+          return Object.entries(queryObj).every(([key, val]) => item[key] === val);
+        });
+      } catch {}
+    }
+
+    let result = [...list];
+    if (sort && typeof sort === "string") {
+      const desc = sort.startsWith("-");
+      const field = desc ? sort.slice(1) : sort;
+      result.sort((a, b) => {
+        if (a[field] < b[field]) return desc ? 1 : -1;
+        if (a[field] > b[field]) return desc ? -1 : 1;
+        return 0;
+      });
+    }
+
+    const skipNum = skip ? parseInt(skip as string, 10) : 0;
+    if (skipNum > 0) {
+      result = result.slice(skipNum);
+    }
+    const limitNum = limit ? parseInt(limit as string, 10) : 0;
+    if (limitNum > 0) {
+      result = result.slice(0, limitNum);
+    }
+
+    res.json(result);
+  });
+
+  // Base44 Get Entity by ID
+  app.get("/api/apps/:appId/entities/:entity/:id", (req: Request, res: Response) => {
+    const { entity, id } = req.params;
+    const list = base44EntityStore[entity] || [];
+    const item = list.find((x) => x.id === id);
+    if (item) {
+      return res.json(item);
+    }
+    return res.json({ id });
+  });
+
+  // Base44 Create Entity
+  app.post("/api/apps/:appId/entities/:entity", (req: Request, res: Response) => {
+    const { entity } = req.params;
+    if (!base44EntityStore[entity]) base44EntityStore[entity] = [];
+    const newItem: EntityRecord = {
+      id: "item_" + Date.now() + "_" + Math.random().toString(36).substring(2, 7),
+      created_date: new Date().toISOString(),
+      ...req.body,
+    };
+    base44EntityStore[entity].unshift(newItem);
+    res.json(newItem);
+  });
+
+  // Base44 Bulk Create
+  app.post("/api/apps/:appId/entities/:entity/bulk", (req: Request, res: Response) => {
+    const { entity } = req.params;
+    if (!base44EntityStore[entity]) base44EntityStore[entity] = [];
+    const items = Array.isArray(req.body) ? req.body : [req.body];
+    const created = items.map((data: any) => ({
+      id: "item_" + Date.now() + "_" + Math.random().toString(36).substring(2, 7),
+      created_date: new Date().toISOString(),
+      ...data,
+    }));
+    base44EntityStore[entity].unshift(...created);
+    res.json(created);
+  });
+
+  // Base44 Update Entity
+  app.put("/api/apps/:appId/entities/:entity/:id", (req: Request, res: Response) => {
+    const { entity, id } = req.params;
+    if (!base44EntityStore[entity]) base44EntityStore[entity] = [];
+    const idx = base44EntityStore[entity].findIndex((x) => x.id === id);
+    if (idx !== -1) {
+      base44EntityStore[entity][idx] = {
+        ...base44EntityStore[entity][idx],
+        ...req.body,
+        updated_date: new Date().toISOString(),
+      };
+      return res.json(base44EntityStore[entity][idx]);
+    }
+    const created: EntityRecord = { id, ...req.body, updated_date: new Date().toISOString() };
+    base44EntityStore[entity].unshift(created);
+    res.json(created);
+  });
+
+  // Base44 Delete Entity
+  app.delete("/api/apps/:appId/entities/:entity/:id", (req: Request, res: Response) => {
+    const { entity, id } = req.params;
+    if (base44EntityStore[entity]) {
+      base44EntityStore[entity] = base44EntityStore[entity].filter((x) => x.id !== id);
+    }
+    res.json({ success: true, id });
+  });
+
+  // Base44 Auth Endpoints
+  app.post("/api/apps/:appId/auth/login", (req: Request, res: Response) => {
+    const email = req.body?.email || "santoshtrade27@gmail.com";
+    res.json({
+      access_token: "token_" + Date.now(),
+      user: {
+        id: "usr_" + Date.now(),
+        email,
+        full_name: email.split("@")[0].replace(/\b\w/g, (l: string) => l.toUpperCase()),
+        role: "admin",
+      },
+    });
+  });
+
+  app.post("/api/apps/:appId/auth/register", (_req: Request, res: Response) => {
+    res.json({ success: true });
+  });
+
+  app.post("/api/apps/:appId/auth/verify-otp", (_req: Request, res: Response) => {
+    res.json({ access_token: "token_otp_" + Date.now() });
+  });
+
+  app.post("/api/apps/:appId/auth/resend-otp", (_req: Request, res: Response) => {
+    res.json({ success: true });
+  });
+
+  app.post("/api/apps/:appId/auth/reset-password-request", (_req: Request, res: Response) => {
+    res.json({ success: true });
+  });
+
+  app.post("/api/apps/:appId/auth/reset-password", (_req: Request, res: Response) => {
+    res.json({ success: true });
+  });
+
+  // Base44 Core Integrations
+  app.post("/api/apps/:appId/integrations/Core/UploadFile", (_req: Request, res: Response) => {
+    res.json({
+      file_url:
+        "https://media.base44.com/images/public/6a9ae27c746fec94dc69b172/fc65e0714_generated_image.png",
+    });
+  });
+
+  // Catch-all route for any other Base44 API request to prevent 404
+  app.all("/api/apps/*all", (_req: Request, res: Response) => {
+    res.json({ success: true, data: [] });
   });
 
   // Dedicated AI Assistant endpoint

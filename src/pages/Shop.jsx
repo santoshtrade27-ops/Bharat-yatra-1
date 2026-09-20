@@ -45,9 +45,11 @@ export default function Shop() {
           }
         }
       } catch {}
-      base44.entities.Product.list("-created_date", 100).then((list) => {
-        if (list && list.length) setProducts(list);
-      }).catch(() => {});
+      if (base44?.entities?.Product?.list) {
+        base44.entities.Product.list("-created_date", 100).then((list) => {
+          if (list && list.length) setProducts(list);
+        }).catch(() => {});
+      }
     };
 
     loadProducts();
@@ -168,13 +170,13 @@ export default function Shop() {
       {/* Catalog Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
         <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-          <div className="flex gap-2 overflow-x-auto pb-1 max-w-full">
+          <div className="flex gap-2 overflow-x-auto pb-1 max-w-full -mx-4 px-4 sm:mx-0 sm:px-0 touch-scroll scrollbar-none">
             {demandFilters.map((f) => (
               <button
                 key={f}
                 type="button"
                 onClick={() => setFilter(f)}
-                className={`px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all ${
+                className={`px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all shrink-0 ${
                   filter === f
                     ? "bg-primary text-primary-foreground shadow-xs"
                     : "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -363,7 +365,7 @@ export default function Shop() {
             </div>
 
             {/* Sidebar Bottom Actions */}
-            <div className="p-4 border-t border-border bg-card flex items-center gap-3">
+            <div className="p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] border-t border-border bg-card flex items-center gap-3">
               <button
                 type="button"
                 onClick={() => handleSidebarAddToCart(selectedProduct)}

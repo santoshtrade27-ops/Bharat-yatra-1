@@ -44,7 +44,8 @@ export default function Translator() {
   // Initialize Speech Recognition
   const startSpeechRecognition = async () => {
     setMicError("");
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const win = typeof window !== "undefined" ? window : {};
+    const SpeechRecognition = win.SpeechRecognition || win.webkitSpeechRecognition;
     
     if (!SpeechRecognition) {
       setMicError("Speech recognition is not natively supported in this browser. Try Chrome, Edge, or Safari, or click 'Open in New Window'.");

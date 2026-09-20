@@ -73,24 +73,6 @@ export default function HeritageDetailModal({ site: rawSite, onClose }) {
     window.speechSynthesis.speak(utterance);
   };
 
-  // Add Escape key listener and body scroll lock
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === "Escape") {
-        if (window.speechSynthesis) window.speechSynthesis.cancel();
-        onClose();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    document.body.style.overflow = "hidden";
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = "auto";
-    };
-  }, [onClose]);
-
-  const [imageFit, setImageFit] = useState("cover"); // "cover" or "contain"
-
   if (!rawSite) return null;
 
   const currentLangObj = INDIAN_REGIONAL_LANGUAGES.find((l) => l.code === activeLang) || INDIAN_REGIONAL_LANGUAGES[0];
@@ -102,73 +84,49 @@ export default function HeritageDetailModal({ site: rawSite, onClose }) {
     navigate(`/planner?destination=${encodeURIComponent(destination)}&state=${encodeURIComponent(rawSite.state || "")}`);
   };
 
-  const handleClose = () => {
-    if (window.speechSynthesis) window.speechSynthesis.cancel();
-    onClose();
-  };
-
   return (
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md overflow-y-auto animate-fadeIn"
-      onClick={handleClose}
-    >
-      <div 
-        className="relative w-full max-w-3xl my-auto bg-card text-card-foreground rounded-3xl shadow-2xl border border-border/80 overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm overflow-y-auto animate-fadeIn">
+      <div className="relative w-full max-w-3xl my-auto bg-card text-card-foreground rounded-2xl sm:rounded-3xl shadow-2xl border border-border overflow-hidden">
         {/* Header Image with gradient overlay */}
-        <div className="relative min-h-[260px] max-h-[380px] w-full bg-stone-950 overflow-hidden flex items-center justify-center group">
+        <div className="relative h-48 sm:h-80 w-full overflow-hidden">
           <img 
             src={rawSite.image} 
             alt={rawSite.name} 
-            className={`w-full transition-all duration-300 ${
-              imageFit === "contain" 
-                ? "max-h-[380px] object-contain py-2 bg-stone-950" 
-                : "h-64 sm:h-80 object-cover object-center"
-            }`}
+            className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
           
-          {/* Top Control Bar: Easy-to-click Close & Image Aspect Toggle */}
-          <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-20 pointer-events-auto">
-            <button
-              onClick={() => setImageFit(prev => prev === "cover" ? "contain" : "cover")}
-              className="px-3 py-1.5 rounded-full bg-black/70 hover:bg-black/90 text-white text-xs font-semibold backdrop-blur-md border border-white/20 transition-all flex items-center gap-1.5"
-              title="Toggle Full Image Fit"
-            >
-              <span>{imageFit === "cover" ? "Fit Full Photo" : "Fill Header"}</span>
-            </button>
+          <button 
+            onClick={() => {
+              if (window.speechSynthesis) window.speechSynthesis.cancel();
+              onClose();
+            }}
+            className="absolute top-3 right-3 sm:top-4 sm:right-4 p-2 rounded-full bg-black/60 text-white hover:bg-black/90 transition-colors"
+            title="Close"
+          >
+            <X className="w-5 h-5" />
+          </button>
 
-            <button 
-              onClick={handleClose}
-              className="px-3.5 py-1.5 rounded-full bg-red-600 hover:bg-red-700 text-white font-bold text-xs shadow-xl backdrop-blur-md transition-all flex items-center gap-1.5 hover:scale-105 active:scale-95 border border-white/30"
-              title="Close modal (Esc)"
-            >
-              <X className="w-4 h-4 stroke-[3]" />
-              <span>Close</span>
-            </button>
-          </div>
-
-          <div className="absolute bottom-4 left-4 right-4 sm:left-6 sm:right-6 text-white pointer-events-none">
-            <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-              <span className="px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider rounded-full bg-primary text-primary-foreground">
+          <div className="absolute bottom-3 left-4 right-4 sm:bottom-4 sm:left-6 sm:right-6 text-white">
+            <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 flex-wrap">
+              <span className="px-2.5 py-0.5 text-[10px] sm:text-xs font-semibold uppercase tracking-wider rounded-full bg-primary text-primary-foreground">
                 {rawSite.tag || "Heritage"}
               </span>
-              <span className="px-2.5 py-0.5 text-xs font-medium rounded-full bg-white/20 backdrop-blur-md text-white flex items-center gap-1">
+              <span className="px-2.5 py-0.5 text-[10px] sm:text-xs font-medium rounded-full bg-white/20 backdrop-blur-md text-white flex items-center gap-1">
                 <MapPin className="w-3 h-3" /> {rawSite.city ? `${rawSite.city}, ` : ""}{rawSite.state}
               </span>
               {rawSite.rating && (
-                <span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-amber-500/90 text-white flex items-center gap-1">
+                <span className="px-2.5 py-0.5 text-[10px] sm:text-xs font-semibold rounded-full bg-amber-500/90 text-white flex items-center gap-1">
                   <Star className="w-3 h-3 fill-current" /> {rawSite.rating} ({rawSite.reviewsCount || 100}+ reviews)
                 </span>
               )}
             </div>
-            <h2 className="text-xl sm:text-3xl font-bold tracking-tight drop-shadow-md">{siteData.name}</h2>
+            <h2 className="text-xl sm:text-3xl font-bold tracking-tight">{siteData.name}</h2>
           </div>
         </div>
 
         {/* Modal Body Content */}
-        <div className="p-6 sm:p-8 space-y-6 max-h-[65vh] overflow-y-auto">
+        <div className="p-4 sm:p-8 space-y-5 sm:space-y-6 max-h-[70vh] sm:max-h-[65vh] overflow-y-auto">
           {/* AI Language Translation Bar */}
           <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-primary/10 to-amber-500/5 border border-primary/20 flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2">
@@ -213,7 +171,7 @@ export default function HeritageDetailModal({ site: rawSite, onClose }) {
             </div>
             <button
               onClick={handlePlanTrip}
-              className="px-5 py-2.5 rounded-full bg-primary text-primary-foreground font-semibold text-sm shadow-md hover:opacity-90 flex items-center gap-2 transition-all"
+              className="w-full sm:w-auto px-5 py-2.5 rounded-full bg-primary text-primary-foreground font-semibold text-sm shadow-md hover:opacity-90 flex items-center justify-center gap-2 transition-all active:scale-95"
             >
               <Compass className="w-4 h-4" /> Plan Trip to {rawSite.city || rawSite.name.split(" ")[0]}
             </button>

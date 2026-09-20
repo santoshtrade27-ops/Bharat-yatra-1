@@ -47,18 +47,21 @@ export default function HeroVideo({ src }) {
         onPause={() => setPlaying(false)}
         onVolumeChange={() => setMuted(!!videoRef.current?.muted)}
       />
-      <div className="absolute bottom-4 left-4 sm:bottom-6 sm:left-6 z-20 flex items-center gap-1 p-1 rounded-full bg-stone-900/80 text-white backdrop-blur-md border border-white/20 shadow-xl">
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1 p-1.5 rounded-full bg-stone-900/80 text-white backdrop-blur ring-1 ring-white/15">
         <button
           onClick={togglePlay}
           aria-label={playing ? "Pause" : "Play"}
-          className="w-9 h-9 grid place-items-center rounded-full hover:bg-white/20 transition-colors"
+          className="w-10 h-10 grid place-items-center rounded-full hover:bg-white/15 transition-colors"
         >
           {playing ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
         </button>
+        <span className="text-[10px] font-medium uppercase tracking-wider text-stone-300 px-1.5">
+          {playing ? "Playing" : "Paused"}
+        </span>
         <button
           onClick={toggleMute}
           aria-label={muted ? "Unmute" : "Mute"}
-          className="w-9 h-9 grid place-items-center rounded-full hover:bg-white/20 transition-colors"
+          className="w-10 h-10 grid place-items-center rounded-full hover:bg-white/15 transition-colors"
         >
           {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
         </button>

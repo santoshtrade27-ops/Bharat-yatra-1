@@ -105,6 +105,7 @@ export default function Safety() {
     localContacts: "",
     ticketInfo: "",
     checkInTime: "Every 4 Hours",
+    deviceName: "",
     specialInstructions: "",
     photoUrl: "",
   });
@@ -246,7 +247,9 @@ export default function Safety() {
   function startSirenAudio() {
     try {
       if (!audioContextRef.current) {
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        const win = typeof window !== "undefined" ? window : {};
+        const AudioCtx = win.AudioContext || win.webkitAudioContext;
+        if (!AudioCtx) return;
         audioContextRef.current = new AudioCtx();
       }
       const ctx = audioContextRef.current;
@@ -297,7 +300,8 @@ export default function Safety() {
 
   // Voice Speech Recognition
   function toggleVoiceInput() {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const win = typeof window !== "undefined" ? window : {};
+    const SpeechRecognition = win.SpeechRecognition || win.webkitSpeechRecognition;
     if (!SpeechRecognition) {
       alert("Speech recognition is not supported in this browser. Please type your emergency description.");
       return;
@@ -574,10 +578,7 @@ export default function Safety() {
   const userLat = coords ? parseFloat(coords[0]) : 17.7089;
   const userLng = coords ? parseFloat(coords[1]) : 83.3039;
 
-  const safeCenters = Array.isArray(emergencyCenters) ? emergencyCenters : [];
-  const safeScams = Array.isArray(scamsList) ? scamsList : [];
-
-  const filteredCenters = safeCenters
+  const filteredCenters = emergencyCenters
     .filter(c => {
       if (selectedStateFilter === "All States") return true;
       return (c.city || "").toLowerCase().includes(selectedStateFilter.toLowerCase());
@@ -591,7 +592,7 @@ export default function Safety() {
       return 0;
     });
 
-  const filteredScams = safeScams.filter(s => {
+  const filteredScams = scamsList.filter(s => {
     if (selectedStateFilter === "All States") return true;
     return (s.state || "").toLowerCase().includes(selectedStateFilter.toLowerCase()) || 
            (s.city || "").toLowerCase().includes(selectedStateFilter.toLowerCase());
@@ -1334,7 +1335,7 @@ export default function Safety() {
                       </form>
 
                       {/* Recent Activities Timeline */}
-                      {Array.isArray(registered?.liveLocation?.activities) && registered.liveLocation.activities.length > 0 && (
+                      {registered?.liveLocation?.activities && (
                         <div className="space-y-1.5 pt-2 max-h-40 overflow-y-auto">
                           {registered.liveLocation.activities.map((act, idx) => (
                             <div key={idx} className="p-2 rounded-xl bg-muted/40 border border-border text-[11px] flex items-start gap-2">

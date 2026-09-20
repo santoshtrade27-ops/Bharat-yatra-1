@@ -17,36 +17,36 @@ export default function Stories() {
   return (
     <div>
       <section className="bg-card border-b border-border">
-        <div className="max-w-7xl mx-auto px-6 py-10">
-          <h1 className="text-3xl font-bold">Stories</h1>
-          <p className="text-muted-foreground mt-2">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
+          <h1 className="text-2xl sm:text-3xl font-bold">Stories</h1>
+          <p className="text-muted-foreground mt-2 text-sm sm:text-base">
             Video & book gallery — folk tales, crafts, spiritual journeys.
           </p>
         </div>
       </section>
 
-      <section className="max-w-7xl mx-auto px-6 py-10">
-        <div className="flex flex-wrap items-center gap-4 mb-6">
-          <div className="flex gap-2 flex-wrap">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-6">
+          <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap touch-scroll scrollbar-none">
             {cats.map((c) => (
               <button
                 key={c}
                 onClick={() => setCat(c)}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                  cat === c ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-colors shrink-0 ${
+                  cat === c ? "bg-primary text-primary-foreground font-semibold" : "bg-muted text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {c}
               </button>
             ))}
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 touch-scroll scrollbar-none">
             {["All", "video", "book"].map((t) => (
               <button
                 key={t}
                 onClick={() => setType(t)}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-medium capitalize transition-colors ${
-                  type === t ? "bg-teal text-teal-foreground" : "bg-muted text-muted-foreground"
+                className={`px-3.5 py-1.5 rounded-full text-xs font-medium capitalize transition-colors shrink-0 ${
+                  type === t ? "bg-teal text-teal-foreground font-semibold" : "bg-muted text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {t}

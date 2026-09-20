@@ -33,14 +33,36 @@ import Translator from '@/pages/Translator';
 import Profile from '@/pages/Profile';
 import Admin from '@/pages/Admin';
 
-const MainAppRoutes = () => {
+const AuthenticatedApp = () => {
+  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+
+  // Show loading spinner while checking app public settings or auth
+  if (isLoadingPublicSettings || isLoadingAuth) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  // Handle authentication errors
+  if (authError) {
+    if (authError.type === 'user_not_registered') {
+      return <UserNotRegisteredError />;
+    } else if (authError.type === 'auth_required') {
+      // Redirect to login automatically
+      navigateToLogin();
+      return null;
+    }
+  }
+
+  // Render the main app
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
-      
       <Route element={<ErrorBoundary><Layout /></ErrorBoundary>}>
         <Route path="/" element={<Home />} />
         <Route path="/heritage" element={<Heritage />} />
@@ -54,22 +76,21 @@ const MainAppRoutes = () => {
         <Route path="/event-planner" element={<EventPlanner />} />
         <Route path="/surprise-planner" element={<SurprisePlanner />} />
         <Route path="/translate" element={<Translator />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute unauthenticatedElement={<Navigate to="/login?returnTo=/admin" replace />}>
-              <Admin />
-            </ProtectedRoute>
-          }
-        />
+        
+        {/* Protected Routes */}
+        <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/admin" element={<Admin />} />
+        </Route>
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
 };
 
+
 function App() {
+
   return (
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>
@@ -77,14 +98,14 @@ function App() {
           <I18nProvider>
             <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
               <ScrollToTop />
-              <MainAppRoutes />
+              <AuthenticatedApp />
             </Router>
             <Toaster />
           </I18nProvider>
         </ThemeProvider>
       </QueryClientProvider>
     </AuthProvider>
-  );
+  )
 }
 
 export default App
